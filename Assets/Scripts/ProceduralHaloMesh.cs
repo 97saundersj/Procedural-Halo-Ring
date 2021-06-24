@@ -7,7 +7,9 @@ public class ProceduralHaloMesh : MonoBehaviour
 {
 	public int CircleSegmentCount;
 	public float width;
-	public bool renderBothSides;
+
+	public bool renderInnerHalo = true;
+	public bool renderBothSides = false;
 
 	private Mesh mesh;
 	private Vector3[] vertices;
@@ -71,18 +73,22 @@ public class ProceduralHaloMesh : MonoBehaviour
 
 			if (v < CircleSegmentCount)
 			{
-				//First Triangle
-				indices[startIndex] = startVert;
-				indices[startIndex + 1] = startVert + 1;
-				indices[startIndex + 2] = startVert + 2;
+				if (renderInnerHalo)
+				{
+					//First Triangle
+					indices[startIndex] = startVert;
+					indices[startIndex + 1] = startVert + 1;
+					indices[startIndex + 2] = startVert + 2;
 
-				//Second Triangle
-				indices[startIndex + 3] = startVert + 3;
-				indices[startIndex + 4] = startVert + 2;
-				indices[startIndex + 5] = startVert + 1;
+					//Second Triangle
+					indices[startIndex + 3] = startVert + 3;
+					indices[startIndex + 4] = startVert + 2;
+					indices[startIndex + 5] = startVert + 1;
+
+				}
 
 				//Other Side for normals
-				if (renderBothSides)
+				if (renderInnerHalo == false && v < CircleSegmentCount -1)
 				{
 					//First Triangle
 					indices[startIndex + 6] = startVert + 2;
