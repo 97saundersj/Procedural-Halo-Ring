@@ -146,6 +146,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
+    Android: com.DefaultCompany.ProcedualHaloRing
     Standalone: com.DefaultCompany.ProcedualHaloRing
   buildNumber:
     Standalone: 0
