@@ -42,8 +42,6 @@ public class ProceduralHaloMesh : MonoBehaviour
 		GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 		mesh.name = "Procedural Halo";
 		GenerateCircleMesh();
-
-		
 	}
 
 	private Mesh GenerateCircleMesh()
@@ -65,13 +63,13 @@ public class ProceduralHaloMesh : MonoBehaviour
 		{
 			vert.Add(new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)));
 			vert.Add(new Vector3(Mathf.Cos(angle), width, Mathf.Sin(angle)));
-			
+
 			angle -= segmentWidth;
-			
+
 			var startVert = v * 2;
 			var startIndex = v * 6 * (renderBothSides ? 2 : 1);
 
-			if ( v < CircleSegmentCount)
+			if (v < CircleSegmentCount)
 			{
 				//First Triangle
 				indices[startIndex] = startVert;
@@ -83,21 +81,9 @@ public class ProceduralHaloMesh : MonoBehaviour
 				indices[startIndex + 4] = startVert + 2;
 				indices[startIndex + 5] = startVert + 1;
 
-
-				//UVs
-				/*
-				uv[0] = new Vector2(0, 0);
-				uv[1] = new Vector2(0, 1);
-
-				uv[2] = new Vector2(0.5f, 0);
-				uv[3] = new Vector2(0.5f, 1);
-
-				uv[4] = new Vector2(1, 0);
-				uv[5] = new Vector2(1, 1);
-				*/
 				//Other Side for normals
 				if (renderBothSides)
-                {
+				{
 					//First Triangle
 					indices[startIndex + 6] = startVert + 2;
 					indices[startIndex + 7] = startVert + 1;
@@ -111,6 +97,18 @@ public class ProceduralHaloMesh : MonoBehaviour
 			}
 		}
 
+		//Calculate UVs
+		for (int segment = 0; segment <= CircleSegmentCount; segment++)
+		{
+			var startVert = segment * 2;
+
+			float segmentRatio = (float)((double)segment / (double)CircleSegmentCount);
+
+			//UVs
+			uv[startVert] = new Vector2(segmentRatio, 0);
+			uv[startVert + 1] = new Vector2(segmentRatio, 1);
+		}
+
 		circle.SetVertices(vert);
 		circle.SetUVs(0, uv);
 		circle.SetIndices(indices, MeshTopology.Triangles, 0);
@@ -118,8 +116,6 @@ public class ProceduralHaloMesh : MonoBehaviour
 		circle.RecalculateBounds();
 
 		circle.RecalculateNormals();
-		//circle.RecalculateUVDistributionMetrics();
-
 
 		vertices = vert.ToArray();
 
