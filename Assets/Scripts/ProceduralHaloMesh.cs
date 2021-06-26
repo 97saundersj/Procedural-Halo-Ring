@@ -69,15 +69,9 @@ public class ProceduralHaloMesh : MonoBehaviour
 		//loop through each segment
 		var angle = 0f;
 		var segmentWidth = Mathf.PI * 2f / CircleSegmentCount;
-
-		
 		for (int v = 0; v < CircleSegmentCount + 1; v++)
 		{
-			float ang = v * Mathf.PI * 2f / CircleSegmentCount;
-
-			//vert.Add(new Vector3(Mathf.Cos(ang) * Random.Range(1f, 1.01f), 0f, Mathf.Sin(ang) * Random.Range(1f, 1.01f)));
-			//vert.Add(new Vector3(Mathf.Cos(ang) * Random.Range(1f, 1.01f), width, Mathf.Sin(ang) * Random.Range(1f, 1.01f)));
-			vert.Add(new Vector3(Mathf.Cos(ang) * 1, width, Mathf.Sin(ang) * 1));
+			vert.Add(new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)));
 			vert.Add(new Vector3(Mathf.Cos(angle), width, Mathf.Sin(angle)));
 
 			angle -= segmentWidth;
@@ -151,12 +145,12 @@ public class ProceduralHaloMesh : MonoBehaviour
 		}
 
 		Gizmos.color = Color.black;
-		for (int i = 2; i < vertices.Length; i++)
+		for (int i = 0; i < vertices.Length; i++)
 		{
 			Gizmos.color = Color.black;
 			Gizmos.DrawSphere(vertices[i], 0.001f);
 
-			UnityEditor.Handles.Label(vertices[i], $"({vertices[i].x.ToString()},{vertices[i].z.ToString()})");
+			UnityEditor.Handles.Label(vertices[i], i.ToString());
 		}
 	}
 
