@@ -5,7 +5,10 @@ using System.Collections.Generic;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralHaloMesh : MonoBehaviour
 {
+	[Range(3, 300)]
 	public int CircleSegmentCount;
+
+	[Range(0.01f, 1)]
 	public float width;
 
 	public bool renderInnerHalo = true;
@@ -31,6 +34,11 @@ public class ProceduralHaloMesh : MonoBehaviour
 	}
 	void OnValidate()
 	{
+		if (CircleSegmentCount < 3)
+		{
+			CircleSegmentCount = 3;
+		}
+
 		if (!Application.isPlaying)
 		{
 			Generate();
