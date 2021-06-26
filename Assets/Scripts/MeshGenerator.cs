@@ -3,11 +3,13 @@ using System.Collections;
 
 public static class MeshGenerator {
 
-	public static MeshData GenerateTerrainMesh(float[,] heightMap) {
+	public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightScale, bool createHalo) {
 		int width = heightMap.GetLength (0);
 		int height = heightMap.GetLength (1);
 		float topLeftX = (width - 1) / -2f;
 		float topLeftZ = (height - 1) / 2f;
+
+
 
 		MeshData meshData = new MeshData (width, height);
 		int vertexIndex = 0;
@@ -15,7 +17,22 @@ public static class MeshGenerator {
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 
-				meshData.vertices [vertexIndex] = new Vector3 (topLeftX + x, heightMap [x, y], topLeftZ - y);
+				Vector3 vector;
+
+				if (createHalo)
+                {
+					float ang = x * Mathf.PI * 2f / width;
+					float currentWidth = y * 0.01f;
+					float heightMapNormalised = ((1 - heightMap[x, y]) * 0.05f) + 1;
+
+					vector = new Vector3(Mathf.Cos(ang) * heightMapNormalised, currentWidth, Mathf.Sin(ang) * heightMapNormalised);
+				}
+				else
+                {
+					vector = meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, heightMap[x, y]* heightScale, topLeftZ - y);
+				}
+				
+				meshData.vertices[vertexIndex] = vector;
 				meshData.uvs [vertexIndex] = new Vector2 (x / (float)width, y / (float)height);
 
 				if (x < width - 1 && y < height - 1) {
