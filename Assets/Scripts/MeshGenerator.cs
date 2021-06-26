@@ -12,6 +12,7 @@ public static class MeshGenerator {
 
 
 		MeshData meshData = new MeshData (width, height);
+
 		int vertexIndex = 0;
 
 		for (int y = 0; y < height; y++) {
@@ -23,7 +24,7 @@ public static class MeshGenerator {
                 {
 					float ang = x * Mathf.PI * 2f / width;
 					float currentWidth = y * 0.01f;
-					float heightMapNormalised = ((1 - heightMap[x, y]) * 0.05f) + 1;
+					float heightMapNormalised = ((1 - heightMap[x, y]) * heightScale) + 1;
 
 					vector = new Vector3(Mathf.Cos(ang) * heightMapNormalised, currentWidth, Mathf.Sin(ang) * heightMapNormalised);
 				}
@@ -71,6 +72,8 @@ public class MeshData {
 
 	public Mesh CreateMesh() {
 		Mesh mesh = new Mesh ();
+
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 		mesh.vertices = vertices;
 		mesh.triangles = triangles;
 		mesh.uv = uvs;

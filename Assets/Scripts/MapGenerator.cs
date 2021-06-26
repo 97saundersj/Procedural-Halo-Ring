@@ -23,7 +23,7 @@ public class MapGenerator : MonoBehaviour {
 
 	public TerrainType[] regions;
 
-	[Range(1, 100)]
+	[Range(0, 100)]
 	public float heightScale;
 
 	public bool createHalo;
