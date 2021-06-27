@@ -44,9 +44,9 @@ public class MapGenerator : MonoBehaviour {
 	{
 		GenerateMap();
 	}
-
+	
 	public void GenerateMap() {
-
+		/*
 		mapWidth = (widthScale * 24) + 1;
 		mapHeight = (heightScale * 24) + 1;
 
@@ -73,6 +73,7 @@ public class MapGenerator : MonoBehaviour {
 		} else if (drawMode == DrawMode.Mesh) {
 			display.DrawMesh (MeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail, createHalo), TextureGenerator.TextureFromColourMap (colourMap, mapWidth, mapHeight));
 		}
+		*/
 	}
 
 	void OnValidate() {
