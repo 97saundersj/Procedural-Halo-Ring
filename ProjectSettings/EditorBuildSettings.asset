@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Halo Generator.unity
+    guid: 5ca30e0c9d0ea0b49b089d4632d9adf0
   m_configObjects: {}

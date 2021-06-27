@@ -6,11 +6,23 @@ public class MapGenerator : MonoBehaviour {
 	public enum DrawMode {NoiseMap, ColourMap, Mesh};
 	public DrawMode drawMode;
 
+	[Range(1, 400)]
+	public int widthScale;
+
+	[Range(1, 400)]
+	public int heightScale;
+
 	public int mapWidth;
 	public int mapHeight;
+
+	private int mapChunkfactor = 24;
+
+	private int mapChunkSize = 241;
+
+	[Range(0,6)]
+	public int levelOfDetail;
 	public float noiseScale;
 
-	[Range(1, 10)]
 	public int octaves;
 	[Range(0,1)]
 	public float persistance;
@@ -19,17 +31,25 @@ public class MapGenerator : MonoBehaviour {
 	public int seed;
 	public Vector2 offset;
 
+	public float meshHeightMultiplier;
+	public AnimationCurve meshHeightCurve;
+
 	public bool autoUpdate;
 
 	public TerrainType[] regions;
 
-	[Range(0, 100)]
-	public float heightScale;
-
 	public bool createHalo;
-	private MeshData meshData;
+
+	private void Awake()
+	{
+		GenerateMap();
+	}
 
 	public void GenerateMap() {
+
+		mapWidth = (widthScale * 24) + 1;
+		mapHeight = (heightScale * 24) + 1;
+
 		float[,] noiseMap = Noise.GenerateNoiseMap (mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
 		Color[] colourMap = new Color[mapWidth * mapHeight];
@@ -51,43 +71,27 @@ public class MapGenerator : MonoBehaviour {
 		} else if (drawMode == DrawMode.ColourMap) {
 			display.DrawTexture (TextureGenerator.TextureFromColourMap (colourMap, mapWidth, mapHeight));
 		} else if (drawMode == DrawMode.Mesh) {
-			meshData = MeshGenerator.GenerateTerrainMesh(noiseMap, heightScale, createHalo);
-			display.DrawMesh (meshData, TextureGenerator.TextureFromColourMap (colourMap, mapWidth, mapHeight));
+			display.DrawMesh (MeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail, createHalo), TextureGenerator.TextureFromColourMap (colourMap, mapWidth, mapHeight));
 		}
 	}
 
 	void OnValidate() {
-		if (mapWidth < 1) {
-			mapWidth = 1;
-		}
-		if (mapHeight < 1) {
-			mapHeight = 1;
-		}
 		if (lacunarity < 1) {
 			lacunarity = 1;
 		}
 		if (octaves < 0) {
 			octaves = 0;
 		}
-	}
-/*
-	private void OnDrawGizmos()
-	{
-		if (meshData == null || meshData.vertices == null) 
-		{
-			return;
-		}
-		
-		Gizmos.color = Color.black;
-		for (int i = meshData.vertices.Length- 5; i < meshData.vertices.Length; i++)
-		{
-			Gizmos.color = Color.black;
-			Gizmos.DrawSphere(meshData.vertices[i], 0.001f);
 
-			UnityEditor.Handles.Label(meshData.vertices[i], $"({meshData.vertices[i].x.ToString()},{meshData.vertices[i].z.ToString()})");
+		if(mapWidth != (widthScale * 24) + 1)
+        {
+			mapWidth = (widthScale * 24) + 1;
 		}
-		
-	}*/
+		if (mapHeight != (heightScale * 24) + 1)
+		{
+			mapHeight = (heightScale * 24) + 1;
+		}
+	}
 }
 
 [System.Serializable]

@@ -137,6 +137,7 @@ public class ProceduralHaloMesh : MonoBehaviour
 		return circle;
 	}
 
+	/*
 	private void OnDrawGizmos()
 	{
 		if (vertices == null)
@@ -153,5 +154,5 @@ public class ProceduralHaloMesh : MonoBehaviour
 			UnityEditor.Handles.Label(vertices[i], i.ToString());
 		}
 	}
-
+	*/
 }
