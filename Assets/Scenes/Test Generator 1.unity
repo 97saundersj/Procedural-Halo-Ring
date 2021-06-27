@@ -955,7 +955,7 @@ Transform:
   m_GameObject: {fileID: 1006268541}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 24.5, y: 0.1, z: 24.5}
   m_Children: []
   m_Father: {fileID: 1510417066}
   m_RootOrder: 0
@@ -978,7 +978,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1209367336
 Transform:
   m_ObjectHideFlags: 0
@@ -1012,7 +1012,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 87f6f1c591a461049ae2244ab6735a42, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1086,13 +1086,13 @@ MonoBehaviour:
   textureRender: {fileID: 1006268542}
   meshFilter: {fileID: 1209367339}
   meshRenderer: {fileID: 1209367337}
-  drawMode: 0
-  meshSettings: {fileID: 0}
-  heightMapSettings: {fileID: 0}
-  textureData: {fileID: 0}
-  terrainMaterial: {fileID: 0}
+  drawMode: 1
+  meshSettings: {fileID: 11400000, guid: 46ff57af49f874fe2bd2a350a99d063c, type: 2}
+  heightMapSettings: {fileID: 11400000, guid: 740a13ca91e454c51aeb1f625a396eca, type: 2}
+  textureData: {fileID: 11400000, guid: addd6b0c4581e4f73b0395a4943b9f57, type: 2}
+  terrainMaterial: {fileID: 2100000, guid: 87f6f1c591a461049ae2244ab6735a42, type: 2}
   editorPreviewLOD: 0
-  autoUpdate: 0
+  autoUpdate: 1
 --- !u!4 &1510417066
 Transform:
   m_ObjectHideFlags: 0
@@ -1528,12 +1528,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   colliderLODIndex: 0
-  detailLevels: []
-  meshSettings: {fileID: 0}
-  heightMapSettings: {fileID: 0}
-  textureSettings: {fileID: 0}
-  viewer: {fileID: 0}
-  mapMaterial: {fileID: 0}
+  detailLevels:
+  - lod: 0
+    visibleDstThreshold: 200
+  - lod: 2
+    visibleDstThreshold: 400
+  meshSettings: {fileID: 11400000, guid: 46ff57af49f874fe2bd2a350a99d063c, type: 2}
+  heightMapSettings: {fileID: 11400000, guid: 740a13ca91e454c51aeb1f625a396eca, type: 2}
+  textureSettings: {fileID: 11400000, guid: addd6b0c4581e4f73b0395a4943b9f57, type: 2}
+  viewer: {fileID: 1588887259}
+  mapMaterial: {fileID: 2100000, guid: 87f6f1c591a461049ae2244ab6735a42, type: 2}
 --- !u!1 &1972638920
 GameObject:
   m_ObjectHideFlags: 0
