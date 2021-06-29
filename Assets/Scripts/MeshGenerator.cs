@@ -3,6 +3,52 @@ using System.Collections;
 
 public static class MeshGenerator {
 
+	public static MeshData OLDGenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, bool createHalo)
+	{
+		int width = heightMap.GetLength(0);
+		int height = heightMap.GetLength(1);
+		float topLeftX = (width - 1) / -2f;
+		float topLeftZ = (height - 1) / 2f;
+
+		int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
+		int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;
+
+		MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
+		int vertexIndex = 0;
+
+		for (int y = 0; y < height; y += meshSimplificationIncrement)
+		{
+			for (int x = 0; x < width; x += meshSimplificationIncrement)
+			{
+
+				if (createHalo)
+				{
+					float ang = x * Mathf.PI * 2f / width;
+					float currentWidth = y * 0.01f;
+					float heightMapNormalised = ((1 - heightMap[x, y]) * (heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier)) + 1;
+
+					meshData.vertices[vertexIndex] = new Vector3(Mathf.Cos(ang) * heightMapNormalised, currentWidth, Mathf.Sin(ang) * heightMapNormalised);
+				}
+				else
+				{
+					meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, topLeftZ - y);
+				}
+
+				meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
+
+				if (x < width - 1 && y < height - 1)
+				{
+					meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);
+					meshData.AddTriangle(vertexIndex + verticesPerLine + 1, vertexIndex, vertexIndex + 1);
+				}
+
+				vertexIndex++;
+			}
+		}
+
+		return meshData;
+
+	}
 
 	public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
 
@@ -58,7 +104,24 @@ public static class MeshGenerator {
 						height = heightMainVertexA * (1 - dstPercentFromAToB) + heightMainVertexB * dstPercentFromAToB;
 					}
 
-					meshData.AddVertex (new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent, vertexIndex);
+
+
+					if (meshSettings.createHalo)
+					{
+						float ang = x * Mathf.PI * 2f / numVertsPerLine;
+						float currentWidth = y;//* 0.01f;
+						float heightMapNormalised = ((1 - heightMap[x, y]) * (height * 0.1f)) + 1;
+
+						Vector3 vector = new Vector3(Mathf.Cos(ang) * heightMapNormalised, currentWidth, Mathf.Sin(ang) * heightMapNormalised);
+
+						meshData.AddVertex(vector, percent, vertexIndex);
+					}
+					else
+					{
+						meshData.AddVertex(new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent, vertexIndex);
+					}
+
+						
 
 					bool createTriangle = x < numVertsPerLine - 1 && y < numVertsPerLine - 1 && (!isEdgeConnectionVertex || (x != 2 && y != 2));
 
@@ -84,9 +147,9 @@ public static class MeshGenerator {
 }
 
 public class MeshData {
-	Vector3[] vertices;
+	public Vector3[] vertices;
 	int[] triangles;
-	Vector2[] uvs;
+	public Vector2[] uvs;
 	Vector3[] bakedNormals;
 
 	Vector3[] outOfMeshVertices;
@@ -96,6 +159,13 @@ public class MeshData {
 	int outOfMeshTriangleIndex;
 
 	bool useFlatShading;
+
+	public MeshData(int meshWidth, int meshHeight)
+	{
+		vertices = new Vector3[meshWidth * meshHeight];
+		uvs = new Vector2[meshWidth * meshHeight];
+		triangles = new int[(meshWidth - 1) * (meshHeight - 1) * 6];
+	}
 
 	public MeshData(int numVertsPerLine, int skipIncrement, bool useFlatShading) {
 		this.useFlatShading = useFlatShading;
