@@ -2,8 +2,9 @@
 using System.Collections;
 
 public static class MeshGenerator {
+    public static MinMax elevationMinMax = new MinMax();
 
-	public static MeshData OLDGenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, bool createHalo)
+    public static MeshData OLDGenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, bool createHalo)
 	{
 		int width = heightMap.GetLength(0);
 		int height = heightMap.GetLength(1);
@@ -50,23 +51,23 @@ public static class MeshGenerator {
 
 	}
 
-	public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
+	public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail, HeightMapSettings settings) {
 
 		int skipIncrement = (levelOfDetail == 0)?1:levelOfDetail * 2;
-		int numVertsPerLine = meshSettings.numVertsPerLine;
+		int numVertsPerLine = meshSettings.numXVertsPerLine;
 
 		Vector2 topLeft = new Vector2 (-1, 1) * meshSettings.meshWorldSize / 2f;
 
 		MeshData meshData = new MeshData (numVertsPerLine, skipIncrement, meshSettings.useFlatShading);
 
-		int[,] vertexIndicesMap = new int[numVertsPerLine, numVertsPerLine];
+		int[,] vertexIndicesMap = new int[meshSettings.numXVertsPerLine, meshSettings.numYVertsPerLine];
 		int meshVertexIndex = 0;
 		int outOfMeshVertexIndex = -1;
 
-		for (int y = 0; y < numVertsPerLine; y ++) {
-			for (int x = 0; x < numVertsPerLine; x ++) {
-				bool isOutOfMeshVertex = y == 0 || y == numVertsPerLine - 1 || x == 0 || x == numVertsPerLine - 1;
-				bool isSkippedVertex = x > 2 && x < numVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
+		for (int y = 0; y < meshSettings.numYVertsPerLine; y ++) {
+			for (int x = 0; x < meshSettings.numXVertsPerLine; x ++) {
+				bool isOutOfMeshVertex = y == 0 || y == numVertsPerLine - 1 || x == 0 || x == meshSettings.numXVertsPerLine - 1;
+				bool isSkippedVertex = x > 2 && x < meshSettings.numXVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
 				if (isOutOfMeshVertex) {
 					vertexIndicesMap [x, y] = outOfMeshVertexIndex;
 					outOfMeshVertexIndex--;
@@ -77,15 +78,15 @@ public static class MeshGenerator {
 			}
 		}
 
-		for (int y = 0; y < numVertsPerLine; y ++) {
-			for (int x = 0; x < numVertsPerLine; x++) {
-				bool isSkippedVertex = x > 2 && x < numVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
+		for (int y = 0; y < meshSettings.numYVertsPerLine; y ++) {
+			for (int x = 0; x < meshSettings.numXVertsPerLine; x++) {
+				bool isSkippedVertex = x > 2 && x < meshSettings.numXVertsPerLine - 3 && y > 2 && y < meshSettings.numYVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
 
 				if (!isSkippedVertex) {
-					bool isOutOfMeshVertex = y == 0 || y == numVertsPerLine - 1 || x == 0 || x == numVertsPerLine - 1;
-					bool isMeshEdgeVertex = (y == 1 || y == numVertsPerLine - 2 || x == 1 || x == numVertsPerLine - 2) && !isOutOfMeshVertex;
+					bool isOutOfMeshVertex = y == 0 || y == meshSettings.numYVertsPerLine - 1 || x == 0 || x == meshSettings.numXVertsPerLine - 1;
+					bool isMeshEdgeVertex = (y == 1 || y == meshSettings.numYVertsPerLine - 2 || x == 1 || x == meshSettings.numXVertsPerLine - 2) && !isOutOfMeshVertex;
 					bool isMainVertex = (x - 2) % skipIncrement == 0 && (y - 2) % skipIncrement == 0 && !isOutOfMeshVertex && !isMeshEdgeVertex;
-					bool isEdgeConnectionVertex = (y == 2 || y == numVertsPerLine - 3 || x == 2 || x == numVertsPerLine - 3) && !isOutOfMeshVertex && !isMeshEdgeVertex && !isMainVertex;
+					bool isEdgeConnectionVertex = (y == 2 || y == meshSettings.numYVertsPerLine - 3 || x == 2 || x == meshSettings.numXVertsPerLine - 3) && !isOutOfMeshVertex && !isMeshEdgeVertex && !isMainVertex;
 
 					int vertexIndex = vertexIndicesMap [x, y];
 					Vector2 percent = new Vector2 (x - 1, y - 1) / (numVertsPerLine - 3);
@@ -93,7 +94,7 @@ public static class MeshGenerator {
 					float height = heightMap [x, y];
 
 					if (isEdgeConnectionVertex) {
-						bool isVertical = x == 2 || x == numVertsPerLine - 3;
+						bool isVertical = x == 2 || x == meshSettings.numXVertsPerLine - 3;
 						int dstToMainVertexA = ((isVertical)?y - 2:x-2) % skipIncrement;
 						int dstToMainVertexB = skipIncrement - dstToMainVertexA;
 						float dstPercentFromAToB = dstToMainVertexA / (float)skipIncrement;
@@ -108,13 +109,15 @@ public static class MeshGenerator {
 
 					if (meshSettings.createHalo)
 					{
-						float ang = x * Mathf.PI * 2f / numVertsPerLine;
-						float currentWidth = y;//* 0.01f;
-						float heightMapNormalised = ((1 - heightMap[x, y]) * (height * 0.1f)) + 1;
+						float ang = x * Mathf.PI * 2f / meshSettings.numXVertsPerLine;
+						float currentWidth = (y * 0.01f) - 0.125f;
+						float heightMapNormalised = ((1 - heightMap[x, y]) * (height * 0.01f)) + 1;
 
-						Vector3 vector = new Vector3(Mathf.Cos(ang) * heightMapNormalised, currentWidth, Mathf.Sin(ang) * heightMapNormalised);
+						Vector3 vector = new Vector3((Mathf.Cos(ang) * heightMapNormalised)  , currentWidth , (Mathf.Sin(ang) * heightMapNormalised)  );
 
 						meshData.AddVertex(vector, percent, vertexIndex);
+
+						elevationMinMax.AddValue(heightMapNormalised);
 					}
 					else
 					{
@@ -123,17 +126,21 @@ public static class MeshGenerator {
 
 						
 
-					bool createTriangle = x < numVertsPerLine - 1 && y < numVertsPerLine - 1 && (!isEdgeConnectionVertex || (x != 2 && y != 2));
+					bool createTriangle = x < meshSettings.numXVertsPerLine - 1 && y < meshSettings.numYVertsPerLine - 1 && (!isEdgeConnectionVertex || (x != 2 && y != 2));
 
 					if (createTriangle) {
-						int currentIncrement = (isMainVertex && x != numVertsPerLine - 3 && y != numVertsPerLine - 3) ? skipIncrement : 1;
+						int currentIncrement = (isMainVertex && x != meshSettings.numXVertsPerLine - 3 && y != meshSettings.numYVertsPerLine - 3) ? skipIncrement : 1;
 
 						int a = vertexIndicesMap [x, y];
 						int b = vertexIndicesMap [x + currentIncrement, y];
 						int c = vertexIndicesMap [x, y + currentIncrement];
 						int d = vertexIndicesMap [x + currentIncrement, y + currentIncrement];
+
 						meshData.AddTriangle (a, d, c);
 						meshData.AddTriangle (d, a, b);
+
+						//meshData.AddTriangle (c, d, a);
+						//meshData.AddTriangle (b, a, d);
 					}
 				}
 			}
@@ -291,6 +298,8 @@ public class MeshData {
 
 	public Mesh CreateMesh() {
 		Mesh mesh = new Mesh ();
+
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 		mesh.vertices = vertices;
 		mesh.triangles = triangles;
 		mesh.uv = uvs;

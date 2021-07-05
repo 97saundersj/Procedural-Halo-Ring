@@ -65,7 +65,7 @@ public class TerrainChunk {
 	}
 
 	public void Load() {
-		ThreadedDataRequester.RequestData(() => HeightMapGenerator.GenerateHeightMap (meshSettings.numVertsPerLine, meshSettings.numVertsPerLine, heightMapSettings, sampleCentre), OnHeightMapReceived);
+		ThreadedDataRequester.RequestData(() => HeightMapGenerator.GenerateHeightMap (meshSettings.numXVertsPerLine, meshSettings.numYVertsPerLine, heightMapSettings, sampleCentre), OnHeightMapReceived);
 	}
 
 
@@ -108,7 +108,7 @@ public class TerrainChunk {
 						previousLODIndex = lodIndex;
 						meshFilter.mesh = lodMesh.mesh;
 					} else if (!lodMesh.hasRequestedMesh) {
-						lodMesh.RequestMesh (heightMap, meshSettings);
+						lodMesh.RequestMesh (heightMap, meshSettings, heightMapSettings);
 					}
 				}
 
@@ -131,7 +131,7 @@ public class TerrainChunk {
 
 			if (sqrDstFromViewerToEdge < detailLevels [colliderLODIndex].sqrVisibleDstThreshold) {
 				if (!lodMeshes [colliderLODIndex].hasRequestedMesh) {
-					lodMeshes [colliderLODIndex].RequestMesh (heightMap, meshSettings);
+					lodMeshes [colliderLODIndex].RequestMesh (heightMap, meshSettings, heightMapSettings);
 				}
 			}
 
@@ -173,9 +173,9 @@ class LODMesh {
 		updateCallback ();
 	}
 
-	public void RequestMesh(HeightMap heightMap, MeshSettings meshSettings) {
+	public void RequestMesh(HeightMap heightMap, MeshSettings meshSettings, HeightMapSettings heightMapSettings) {
 		hasRequestedMesh = true;
-		ThreadedDataRequester.RequestData (() => MeshGenerator.GenerateTerrainMesh (heightMap.values, meshSettings, lod), OnMeshDataReceived);
+		ThreadedDataRequester.RequestData (() => MeshGenerator.GenerateTerrainMesh (heightMap.values, meshSettings, lod, heightMapSettings), OnMeshDataReceived);
 	}
 
 }
