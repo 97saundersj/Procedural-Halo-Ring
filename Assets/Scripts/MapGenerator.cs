@@ -6,10 +6,10 @@ public class MapGenerator : MonoBehaviour {
 	public enum DrawMode {NoiseMap, ColourMap, Mesh};
 	public DrawMode drawMode;
 
-	[Range(1, 400)]
+	[Range(1, 1000)]
 	public int widthScale;
 
-	[Range(1, 400)]
+	[Range(1, 100)]
 	public int heightScale;
 
 	public int mapWidth;
