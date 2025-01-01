@@ -14,7 +14,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Public field for selecting rendering option
     public HaloRenderOption renderOption;
 
-    [Range(1, 64)]
+    [Range(1, 256)]
     public int CircleSegmentCount = 4;
 
     [Range(1, 300)]
@@ -30,7 +30,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     public int segmentYVertices = 2; // Number of vertices along the Y axis (top and bottom)
 
     // Procedural Terrain
-    [Range(1, 256)]
+    [Range(1, 16)]
     public int textureMetersPerPixel = 4;
 
     public bool saveTexturesFiles;
@@ -56,6 +56,9 @@ public class ProceduralHaloChunks : MonoBehaviour
     public float uvScaleX;
 
     private GameObject segmentsParent;
+
+    [Range(-1, 256)]
+    public int specificSegmentIndex = -1; // -1 means create all segments
 
     private void Awake()
     {
@@ -89,7 +92,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         // Create a new GameObject to hold all segments
         segmentsParent = new GameObject("Segments");
         segmentsParent.transform.SetParent(this.transform);
-        
+
         // Maintain the position and rotation of the current transform
         segmentsParent.transform.localPosition = Vector3.zero;
         segmentsParent.transform.localRotation = Quaternion.identity;
@@ -101,14 +104,29 @@ public class ProceduralHaloChunks : MonoBehaviour
         int segmentVertexCount = (segmentXVertices + 1) * segmentYVertices;
         int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
 
-        for (int segment = 0; segment < CircleSegmentCount; segment++)
+        // Check if a specific segment index is set
+        if (specificSegmentIndex >= 0 && specificSegmentIndex < CircleSegmentCount)
         {
-            // Create a new HaloSegment instance
-            var haloSegment = new HaloSegment(this, segment);
-
-            var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
-            segmentObject.transform.SetParent(segmentsParent.transform, false);
+            // Create only the specified segment
+            CreateSegment(specificSegmentIndex, segmentIndexCount, segmentVertexCount);
         }
+        else
+        {
+            // Create all segments
+            for (int segment = 0; segment < CircleSegmentCount; segment++)
+            {
+                CreateSegment(segment, segmentIndexCount, segmentVertexCount);
+            }
+        }
+    }
+
+    private void CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount)
+    {
+        // Create a new HaloSegment instance
+        var haloSegment = new HaloSegment(this, segment);
+
+        var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
+        segmentObject.transform.SetParent(segmentsParent.transform, false);
     }
 
     private void DeletePreviousTextureFiles()
@@ -143,15 +161,6 @@ public class ProceduralHaloChunks : MonoBehaviour
             Debug.Log("Deleting previous segments...");
             StartCoroutine(DestroyGO(segmentsParent));
         }
-
-        //Debug.Log("Deleting previous segments...");
-        //foreach (Transform child in segmentsParent.transform)
-        //{
-        //    if (child.name.Contains("HaloSegment"))
-        //    {
-        //        StartCoroutine(DestroyGO(child.gameObject));
-        //    }
-        //}
     }
 
     IEnumerator DestroyGO(GameObject go) {
@@ -165,6 +174,9 @@ public class ProceduralHaloChunks : MonoBehaviour
         {
             CircleSegmentCount = 1;
         }
+
+        // Adjust the range of specificSegmentIndex based on CircleSegmentCount
+        specificSegmentIndex = Mathf.Clamp(specificSegmentIndex, -1, CircleSegmentCount);
 
         if (autoUpdate && !Application.isPlaying)
         {

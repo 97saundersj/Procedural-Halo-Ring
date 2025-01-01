@@ -14,16 +14,34 @@ public class HaloSegment
 
     public GameObject GenerateSegment(int CircleSegmentCount, int segment, int segmentIndexCount, int segmentVertexCount)
     {
+        GameObject segmentObject = new GameObject("HaloSegment_" + segment);
+
         var vertices = new List<Vector3>(segmentVertexCount);
         var uv = new Vector2[segmentVertexCount];
         var indices = new int[segmentIndexCount];
 
         // Generate vertices and indices for this segment
         GenerateSegmentVerticesAndIndices(segment, vertices, indices, CircleSegmentCount);
+
         // Calculate UVs for this segment
-        CalculateSegmentUVs(segment, uv, CircleSegmentCount);
+        CalculateSegmentUVs(uv);
+
+        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount;
+        Debug.Log("segmentWidth: " + segmentWidth);
+
+        float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
+        float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
+
+        float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
+
+        // Generate Procedural Texture
+        var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap);
+        segmentObject.AddComponent<MeshRenderer>().material = CreateMaterial(proceduralTexture);
+
         // Set mesh data for this segment
-        return CreateSegmentMesh(segment, vertices, uv, indices);
+        segmentObject.AddComponent<MeshFilter>().mesh = GenerateMesh(vertices, uv, indices);
+
+        return segmentObject;
     }
 
     public void GenerateSegmentVerticesAndIndices(int segment, List<Vector3> vertices, int[] indices, int circleSegmentCount)
@@ -79,7 +97,7 @@ public class HaloSegment
         }
     }
 
-    public void CalculateSegmentUVs(int segment, Vector2[] uv, int circleSegmentCount)
+    public void CalculateSegmentUVs(Vector2[] uv)
     {
         int segmentXVertices = proceduralHaloChunks.segmentXVertices;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices;
@@ -115,26 +133,13 @@ public class HaloSegment
         }
     }
 
-    private GameObject CreateSegmentMesh(int segment, List<Vector3> vertices, Vector2[] uv, int[] indices)
+    private Texture2D CreateTexture(float widthScale, float heightScale, float[,] noiseMap)
     {
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices;
+        Debug.Log("Updating segment Texture...");
 
-        Debug.Log("Updating segment mesh...");
-        Mesh segmentMesh = new Mesh { name = "Procedural Halo Segment" };
-        segmentMesh.SetVertices(vertices);
-        segmentMesh.SetUVs(0, uv);
-        segmentMesh.SetIndices(indices, MeshTopology.Triangles, 0);
-        segmentMesh.RecalculateBounds();
-        segmentMesh.RecalculateNormals();
-
-        // Assign the segment mesh to a new GameObject
-        GameObject segmentObject = new GameObject("HaloSegment_" + segment);
-        segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
-        MeshRenderer meshRenderer = segmentObject.AddComponent<MeshRenderer>();
-
-        // Apply the procedural texture to the new material
-        Texture2D proceduralTexture = GenerateProceduralNoiseTexture();
+        Texture2D proceduralTexture = GenerateProceduralNoiseTexture(widthScale, heightScale, noiseMap);
+        proceduralTexture.wrapMode = TextureWrapMode.Repeat;
+        proceduralTexture.filterMode = FilterMode.Bilinear;
 
         // Save the texture for visualization
         if (proceduralHaloChunks.saveTexturesFiles)
@@ -142,12 +147,31 @@ public class HaloSegment
             SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + segment);
         }
 
+        return proceduralTexture;
+    }
+
+    private Material CreateMaterial(Texture2D proceduralTexture)
+    {
+        Debug.Log("Updating segment material...");
+
         // Create a new material instance for this segment
         Material newMaterial = new Material(Shader.Find("Standard"));
         newMaterial.mainTexture = proceduralTexture;
-        meshRenderer.material = newMaterial;
 
-        return segmentObject;
+        return newMaterial;
+    }
+
+    private Mesh GenerateMesh(List<Vector3> vertices, Vector2[] uv, int[] indices)
+    {
+        Debug.Log("Updating segment mesh...");
+
+        Mesh segmentMesh = new Mesh { name = "Procedural Halo Segment" };
+        segmentMesh.SetVertices(vertices);
+        segmentMesh.SetUVs(0, uv);
+        segmentMesh.SetIndices(indices, MeshTopology.Triangles, 0);
+        segmentMesh.RecalculateBounds();
+        segmentMesh.RecalculateNormals();
+        return segmentMesh;
     }
 
     private void SaveTextureAsPNG(Texture2D texture, string fileName)
@@ -165,19 +189,14 @@ public class HaloSegment
     }
 
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
-    private Texture2D GenerateProceduralNoiseTexture()
+    private float[,] GenerateNoiseMap(float widthScale, float heightScale)
     {
-        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount;
-        Debug.Log("segmentWidth: " + segmentWidth);
-
-        float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
-        float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
         int seed = proceduralHaloChunks.seed;
         float scale = proceduralHaloChunks.noiseScale;
         int octaves = proceduralHaloChunks.octaves;
         float persistance = proceduralHaloChunks.persistance;
         float lacunarity = proceduralHaloChunks.lacunarity;
-        
+
         // Calculate the pixel offset based on the noise scale
         float pixelOffsetX = 1f / proceduralHaloChunks.noiseScale;
 
@@ -194,6 +213,15 @@ public class HaloSegment
         var mapHeight = Mathf.RoundToInt(heightScale) + 1;
 
         float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset);
+
+        return noiseMap;
+    }
+
+    // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
+    private Texture2D GenerateProceduralNoiseTexture(float widthScale, float heightScale, float[,] noiseMap)
+    {
+        int mapWidth = Mathf.RoundToInt(widthScale) + 1;
+        var mapHeight = Mathf.RoundToInt(heightScale) + 1;
 
         Color[] colourMap = new Color[mapWidth * mapHeight];
         for (int y = 0; y < mapHeight; y++)
@@ -214,9 +242,6 @@ public class HaloSegment
 
         //var proceduralTexture = TextureGenerator.TextureFromHeightMap(noiseMap);
         var proceduralTexture = TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight);
-
-        proceduralTexture.wrapMode = TextureWrapMode.Repeat;
-        proceduralTexture.filterMode = FilterMode.Bilinear;
 
         return proceduralTexture;
     }
