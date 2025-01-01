@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class HaloSegment
 {
@@ -8,11 +8,14 @@ public class HaloSegment
     private float radiusInMeters;
     private float widthInMeters;
     private float uvScaleX;
+
+    private int widthScale;
+    private int heightScale;
+
     private ProceduralHaloChunks.HaloRenderOption renderOption;
     private Transform transform;
-    private Material material;
 
-    public HaloSegment(int segmentXVertices, int segmentYVertices, float radiusInMeters, float widthInMeters, float uvScaleX, ProceduralHaloChunks.HaloRenderOption renderOption, Transform transform, Material material)
+    public HaloSegment(int segmentXVertices, int segmentYVertices, float radiusInMeters, float widthInMeters, float uvScaleX, ProceduralHaloChunks.HaloRenderOption renderOption, int widthScale, int heightScale, Transform transform)
     {
         this.segmentXVertices = segmentXVertices;
         this.segmentYVertices = segmentYVertices;
@@ -20,8 +23,11 @@ public class HaloSegment
         this.widthInMeters = widthInMeters;
         this.uvScaleX = uvScaleX;
         this.renderOption = renderOption;
+
+        this.widthScale = widthScale;
+        this.heightScale = heightScale;
+
         this.transform = transform;
-        this.material = material;
     }
 
     public void GenerateSegment(int CircleSegmentCount, int segment, int segmentIndexCount, int segmentVertexCount)
@@ -35,7 +41,7 @@ public class HaloSegment
         // Calculate UVs for this segment
         CalculateSegmentUVs(segment, uv, CircleSegmentCount);
         // Set mesh data for this segment
-        UpdateSegmentMesh(vertices, uv, indices);
+        UpdateSegmentMesh(segment, vertices, uv, indices);
     }
 
     public void GenerateSegmentVerticesAndIndices(int segment, List<Vector3> vertices, int[] indices, int circleSegmentCount)
@@ -101,7 +107,7 @@ public class HaloSegment
         }
     }
 
-    private void UpdateSegmentMesh(List<Vector3> vertices, Vector2[] uv, int[] indices)
+    private void UpdateSegmentMesh(int segment, List<Vector3> vertices, Vector2[] uv, int[] indices)
     {
         Debug.Log("Updating segment mesh...");
         Mesh segmentMesh = new Mesh { name = "Procedural Halo Segment" };
@@ -114,7 +120,93 @@ public class HaloSegment
         // Assign the segment mesh to a new GameObject
         GameObject segmentObject = new GameObject("HaloSegment");
         segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
-        segmentObject.AddComponent<MeshRenderer>().material = material;
+        MeshRenderer meshRenderer = segmentObject.AddComponent<MeshRenderer>();
+
+        // Apply the procedural texture to the new material
+        Texture2D proceduralTexture = GenerateProceduralNoiseTexture(segmentXVertices, segmentYVertices);
+        proceduralTexture.wrapMode = TextureWrapMode.Repeat;
+        proceduralTexture.filterMode = FilterMode.Bilinear;
+
+        // Save the texture for visualization
+        SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + segment);
+
+        // Create a new material instance for this segment
+        Material newMaterial = new Material(Shader.Find("Standard"));
+        newMaterial.mainTexture = proceduralTexture;
+        meshRenderer.material = newMaterial;
+
         segmentObject.transform.SetParent(transform, false);
     }
-} 
+
+    private void SaveTextureAsPNG(Texture2D texture, string fileName)
+    {
+        byte[] bytes = texture.EncodeToPNG();
+        string filePath = Application.dataPath + "/ProceduralTextures/" + fileName + ".png";
+
+        // Ensure the directory exists
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(filePath));
+
+        // Write the file
+        System.IO.File.WriteAllBytes(filePath, bytes);
+
+        Debug.Log("Texture saved to: " + filePath);
+    }
+
+    // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
+    private Texture2D GenerateProceduralTexture(int segmentXVertices, int segmentYVertices)
+    {
+        var mapWidth = (widthScale * segmentXVertices) + 1;
+        var mapHeight = (heightScale * segmentYVertices) + 1;
+
+        Texture2D texture = new Texture2D(segmentXVertices, mapHeight);
+
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                float xCoord = (float)x / mapWidth;
+                float yCoord = (float)y / segmentYVertices;
+                float sample = Mathf.PerlinNoise(xCoord, yCoord);
+                Color color = new Color(sample, sample, sample);
+                texture.SetPixel(x, y, color);
+            }
+        }
+
+        texture.Apply();
+        return texture;
+    }
+
+    // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
+    private Texture2D GenerateProceduralNoiseTexture(int segmentXVertices, int segmentYVertices)
+    {
+        var mapWidth = (widthScale * segmentXVertices) + 1;
+        var mapHeight = (heightScale * segmentXVertices) + 1;
+
+        //var mapHeight = (heightScale * segmentYVertices) + 1;
+
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, 1, 50, 8, 0.01f, 1, new Vector2(0, 0));
+
+        return TextureGenerator.TextureFromHeightMap(noiseMap);
+        /*
+        MapDisplay display = FindObjectOfType<MapDisplay>();
+    
+        switch (drawMode)
+        {
+            case DrawMode.NoiseMap:
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
+                break;
+            case DrawMode.ColourMap:
+                display.DrawTexture(TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight));
+                break;
+            case DrawMode.Full:
+                var meshData = MeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail, createHalo);
+                
+                // Generate a procedural texture using mapWidth and mapHeight
+                Texture2D proceduralTexture = GenerateProceduralTexture(mapWidth, mapHeight);
+                
+                display.DrawMesh(meshData, proceduralTexture);
+                break;
+        }
+        */
+    }
+}

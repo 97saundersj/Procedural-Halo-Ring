@@ -9,6 +9,9 @@ public static class TextureGenerator
         texture.wrapMode = TextureWrapMode.Clamp;
         texture.SetPixels(colourMap);
         texture.Apply();
+
+        SaveTextureAsPNG(texture, "HaloColourTexture");
+
         return texture;
     }
 
@@ -27,5 +30,19 @@ public static class TextureGenerator
         }
 
         return TextureFromColourMap(colourMap, width, height);
+    }
+
+    private static void SaveTextureAsPNG(Texture2D texture, string fileName)
+    {
+        byte[] bytes = texture.EncodeToPNG();
+        string filePath = Application.dataPath + "/SavedTextures/" + fileName + ".png";
+
+        // Ensure the directory exists
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(filePath));
+
+        // Write the file
+        System.IO.File.WriteAllBytes(filePath, bytes);
+
+        Debug.Log("Texture saved to: " + filePath);
     }
 }

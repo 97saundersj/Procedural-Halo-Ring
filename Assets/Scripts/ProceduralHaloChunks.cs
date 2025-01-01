@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralHaloChunks : MonoBehaviour
 {
     // Enum for rendering options
@@ -15,7 +14,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Public field for selecting rendering option
     public HaloRenderOption renderOption;
 
-    [Range(3, 256)]
+    [Range(1, 256)]
     public int CircleSegmentCount;
 
     [Range(0.01f, 300)]
@@ -29,6 +28,12 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     [Range(2, 256)]
     public int segmentYVertices = 4; // Number of vertices along the Y axis (top and bottom)
+
+    [Range(1, 400)]
+    public int widthScale;
+
+    [Range(1, 400)]
+    public int heightScale;
 
     private Mesh mesh;
     private float circumference;
@@ -50,15 +55,15 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     private void Generate()
     {
-        mesh = new Mesh { name = "Procedural Halo" };
-
-        GetComponent<MeshFilter>().mesh = mesh;
         GenerateCircleMesh();
     }
 
     private void GenerateCircleMesh()
     {
         Debug.Log("Generating circle mesh...");
+
+        // Delete previous texture files
+        DeletePreviousTextureFiles();
 
         // Delete previous segments
         DeletePreviousSegments();
@@ -72,16 +77,37 @@ public class ProceduralHaloChunks : MonoBehaviour
 
         for (int segment = 0; segment < CircleSegmentCount; segment++)
         {
-            var vertices = new List<Vector3>(segmentVertexCount);
-            var uv = new Vector2[segmentVertexCount];
-            var indices = new int[segmentIndexCount];
-
             // Create a new HaloSegment instance
-            var haloSegment = new HaloSegment(segmentXVertices, segmentYVertices, radiusInMeters, widthInMeters, uvScaleX, renderOption, transform, GetComponent<MeshRenderer>().material);
+            var haloSegment = new HaloSegment(segmentXVertices, segmentYVertices, radiusInMeters, widthInMeters, uvScaleX, renderOption, widthScale, heightScale, transform);
 
             haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
         }
     }
+
+    private void DeletePreviousTextureFiles()
+{
+    string directoryPath = Application.dataPath + "/ProceduralTextures/";
+    if (System.IO.Directory.Exists(directoryPath))
+    {
+        string[] files = System.IO.Directory.GetFiles(directoryPath, "*.png");
+        foreach (string file in files)
+        {
+            try
+            {
+                System.IO.File.Delete(file);
+                Debug.Log("Deleted file: " + file);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Failed to delete file: " + file + " Error: " + e.Message);
+            }
+        }
+    }
+    else
+    {
+        Debug.LogWarning("Directory does not exist: " + directoryPath);
+    }
+}
 
     private void DeletePreviousSegments()
     {
@@ -102,9 +128,9 @@ public class ProceduralHaloChunks : MonoBehaviour
     
     void OnValidate()
     {
-        if (CircleSegmentCount < 3)
+        if (CircleSegmentCount < 1)
         {
-            CircleSegmentCount = 3;
+            CircleSegmentCount = 1;
         }
 
         if (!Application.isPlaying)
