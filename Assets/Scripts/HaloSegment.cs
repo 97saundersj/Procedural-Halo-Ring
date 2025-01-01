@@ -4,10 +4,12 @@ using UnityEngine;
 public class HaloSegment
 {
     private ProceduralHaloChunks proceduralHaloChunks;
+    private int segment;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks)
+    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
+        this.segment = segment;
     }
 
     public GameObject GenerateSegment(int CircleSegmentCount, int segment, int segmentIndexCount, int segmentVertexCount)
@@ -127,12 +129,12 @@ public class HaloSegment
         segmentMesh.RecalculateNormals();
 
         // Assign the segment mesh to a new GameObject
-        GameObject segmentObject = new GameObject("HaloSegment");
+        GameObject segmentObject = new GameObject("HaloSegment_" + segment);
         segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
         MeshRenderer meshRenderer = segmentObject.AddComponent<MeshRenderer>();
 
         // Apply the procedural texture to the new material
-        Texture2D proceduralTexture = GenerateProceduralNoiseTexture(segmentXVertices, segmentYVertices);
+        Texture2D proceduralTexture = GenerateProceduralNoiseTexture();
 
         // Save the texture for visualization
         if (proceduralHaloChunks.saveTexturesFiles)
@@ -163,17 +165,29 @@ public class HaloSegment
     }
 
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
-    private Texture2D GenerateProceduralNoiseTexture(int segmentXVertices, int segmentYVertices)
+    private Texture2D GenerateProceduralNoiseTexture()
     {
-        int widthScale = proceduralHaloChunks.widthScale;
-        int heightScale = proceduralHaloChunks.heightScale;
+        int segmentWidth = (int)((2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount);
+        Debug.Log("segmentWidth: " + segmentWidth);
+
+        int widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
+        int heightScale = (int)proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
         int seed = proceduralHaloChunks.seed;
         float scale = proceduralHaloChunks.noiseScale;
+        int octaves = proceduralHaloChunks.octaves;
+        float persistance = proceduralHaloChunks.persistance;
+        float lacunarity = proceduralHaloChunks.lacunarity;
+        
+        // TODO: Offset is not working correctly and has noticable tiling
+        Vector2 offset = new Vector2(segment * widthScale, 0);
 
-        var mapWidth = (widthScale * segmentXVertices) + 1;
-        var mapHeight = (heightScale * segmentYVertices) + 1;
+        Debug.Log("widthScale: " + widthScale);
+        Debug.Log("heightScale: " + heightScale);
 
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, proceduralHaloChunks.octaves, proceduralHaloChunks.persistance, proceduralHaloChunks.lacunarity, new Vector2(0, 0));
+        int mapWidth = widthScale + 1;
+        var mapHeight = heightScale + 1;
+
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset);
 
         Color[] colourMap = new Color[mapWidth * mapHeight];
         for (int y = 0; y < mapHeight; y++)

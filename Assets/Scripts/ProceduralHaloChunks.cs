@@ -15,26 +15,23 @@ public class ProceduralHaloChunks : MonoBehaviour
     public HaloRenderOption renderOption;
 
     [Range(1, 64)]
-    public int CircleSegmentCount;
+    public int CircleSegmentCount = 4;
 
     [Range(0.01f, 300)]
-    public float widthInMeters;
+    public float widthInMeters = 300;
 
     [Range(0.1f, 10000f)]
-    public float radiusInMeters;
+    public float radiusInMeters = 10000f;
 
     [Range(2, 256)]
-    public int segmentXVertices = 64; // Number of vertices along the X axis
+    public int segmentXVertices = 16; // Number of vertices along the X axis
 
     [Range(2, 256)]
-    public int segmentYVertices = 4; // Number of vertices along the Y axis (top and bottom)
+    public int segmentYVertices = 2; // Number of vertices along the Y axis (top and bottom)
 
     // Procedural Terrain
-    [Range(1, 400)]
-    public int widthScale;
-
-    [Range(1, 400)]
-    public int heightScale;
+    [Range(1, 256)]
+    public int textureMetersPerPixel = 4;
 
     public bool saveTexturesFiles;
 
@@ -97,7 +94,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         for (int segment = 0; segment < CircleSegmentCount; segment++)
         {
             // Create a new HaloSegment instance
-            var haloSegment = new HaloSegment(this);
+            var haloSegment = new HaloSegment(this, segment);
 
             var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
             segmentObject.transform.SetParent(transform, false);
@@ -134,7 +131,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         Debug.Log("Deleting previous segments...");
         foreach (Transform child in transform)
         {
-            if (child.name == "HaloSegment")
+            if (child.name.Contains("HaloSegment"))
             {
                 StartCoroutine(DestroyGO(child.gameObject));
             }
