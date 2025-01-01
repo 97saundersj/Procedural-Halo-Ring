@@ -10,8 +10,6 @@ public static class TextureGenerator
         texture.SetPixels(colourMap);
         texture.Apply();
 
-        SaveTextureAsPNG(texture, "HaloColourTexture");
-
         return texture;
     }
 

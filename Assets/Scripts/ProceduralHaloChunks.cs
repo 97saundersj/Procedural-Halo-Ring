@@ -14,7 +14,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Public field for selecting rendering option
     public HaloRenderOption renderOption;
 
-    [Range(1, 256)]
+    [Range(1, 64)]
     public int CircleSegmentCount;
 
     [Range(0.01f, 300)]
@@ -29,15 +29,34 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(2, 256)]
     public int segmentYVertices = 4; // Number of vertices along the Y axis (top and bottom)
 
+    // Procedural Terrain
     [Range(1, 400)]
     public int widthScale;
 
     [Range(1, 400)]
     public int heightScale;
 
-    private Mesh mesh;
-    private float circumference;
-    private float uvScaleX;
+    public bool saveTexturesFiles;
+
+    [Range(0, 6)]
+    public int levelOfDetail;
+    public float noiseScale;
+
+    public int octaves;
+    [Range(0, 1)]
+    public float persistance;
+    public float lacunarity;
+
+    public int seed;
+
+    public TerrainType[] regions;
+
+    public bool autoUpdate;
+
+    [HideInInspector]
+    public float circumference;
+    [HideInInspector]
+    public float uvScaleX;
 
     private void Awake()
     {
@@ -47,13 +66,13 @@ public class ProceduralHaloChunks : MonoBehaviour
     private void Update()
     {
         // Regenerate mesh if parameters are invalid
-        if (mesh == null || CircleSegmentCount < 3 || widthInMeters <= 0 || radiusInMeters <= 0)
+        if (CircleSegmentCount < 3 || widthInMeters <= 0 || radiusInMeters <= 0)
         {
             Generate();
         }
     }
 
-    private void Generate()
+    public void Generate()
     {
         GenerateCircleMesh();
     }
@@ -78,9 +97,10 @@ public class ProceduralHaloChunks : MonoBehaviour
         for (int segment = 0; segment < CircleSegmentCount; segment++)
         {
             // Create a new HaloSegment instance
-            var haloSegment = new HaloSegment(segmentXVertices, segmentYVertices, radiusInMeters, widthInMeters, uvScaleX, renderOption, widthScale, heightScale, transform);
+            var haloSegment = new HaloSegment(this);
 
-            haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
+            var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
+            segmentObject.transform.SetParent(transform, false);
         }
     }
 
@@ -133,7 +153,7 @@ public class ProceduralHaloChunks : MonoBehaviour
             CircleSegmentCount = 1;
         }
 
-        if (!Application.isPlaying)
+        if (autoUpdate && !Application.isPlaying)
         {
             Generate();
         }
