@@ -167,25 +167,31 @@ public class HaloSegment
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
     private Texture2D GenerateProceduralNoiseTexture()
     {
-        int segmentWidth = (int)((2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount);
+        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount;
         Debug.Log("segmentWidth: " + segmentWidth);
 
-        int widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
-        int heightScale = (int)proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
+        float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
+        float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
         int seed = proceduralHaloChunks.seed;
         float scale = proceduralHaloChunks.noiseScale;
         int octaves = proceduralHaloChunks.octaves;
         float persistance = proceduralHaloChunks.persistance;
         float lacunarity = proceduralHaloChunks.lacunarity;
         
-        // TODO: Offset is not working correctly and has noticable tiling
-        Vector2 offset = new Vector2(segment * widthScale, 0);
+        // Calculate the pixel offset based on the noise scale
+        float pixelOffsetX = 1f / proceduralHaloChunks.noiseScale;
+
+        // TODO: Offset is not working correctly and overlaps between segments
+        var xOffset = segment * pixelOffsetX * widthScale;
+        Vector2 offset = new Vector2(xOffset, 0);
 
         Debug.Log("widthScale: " + widthScale);
         Debug.Log("heightScale: " + heightScale);
+        Debug.Log("xOffset: " + segment * pixelOffsetX * widthScale);
+        Debug.Log("scaled xOffset: " + xOffset);
 
-        int mapWidth = widthScale + 1;
-        var mapHeight = heightScale + 1;
+        int mapWidth = Mathf.RoundToInt(widthScale) + 1;
+        var mapHeight = Mathf.RoundToInt(heightScale) + 1;
 
         float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset);
 

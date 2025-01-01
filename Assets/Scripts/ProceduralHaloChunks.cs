@@ -17,8 +17,8 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(1, 64)]
     public int CircleSegmentCount = 4;
 
-    [Range(0.01f, 300)]
-    public float widthInMeters = 300;
+    [Range(1, 300)]
+    public int widthInMeters = 300;
 
     [Range(0.1f, 10000f)]
     public float radiusInMeters = 10000f;
@@ -55,6 +55,8 @@ public class ProceduralHaloChunks : MonoBehaviour
     [HideInInspector]
     public float uvScaleX;
 
+    private GameObject segmentsParent;
+
     private void Awake()
     {
         Generate();
@@ -84,6 +86,14 @@ public class ProceduralHaloChunks : MonoBehaviour
         // Delete previous segments
         DeletePreviousSegments();
 
+        // Create a new GameObject to hold all segments
+        segmentsParent = new GameObject("Segments");
+        segmentsParent.transform.SetParent(this.transform);
+        
+        // Maintain the position and rotation of the current transform
+        segmentsParent.transform.localPosition = Vector3.zero;
+        segmentsParent.transform.localRotation = Quaternion.identity;
+
         circumference = 2 * Mathf.PI * radiusInMeters;
         uvScaleX = circumference / widthInMeters;
 
@@ -97,7 +107,7 @@ public class ProceduralHaloChunks : MonoBehaviour
             var haloSegment = new HaloSegment(this, segment);
 
             var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
-            segmentObject.transform.SetParent(transform, false);
+            segmentObject.transform.SetParent(segmentsParent.transform, false);
         }
     }
 
@@ -128,14 +138,20 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     private void DeletePreviousSegments()
     {
-        Debug.Log("Deleting previous segments...");
-        foreach (Transform child in transform)
+        if (segmentsParent != null)
         {
-            if (child.name.Contains("HaloSegment"))
-            {
-                StartCoroutine(DestroyGO(child.gameObject));
-            }
+            Debug.Log("Deleting previous segments...");
+            StartCoroutine(DestroyGO(segmentsParent));
         }
+
+        //Debug.Log("Deleting previous segments...");
+        //foreach (Transform child in segmentsParent.transform)
+        //{
+        //    if (child.name.Contains("HaloSegment"))
+        //    {
+        //        StartCoroutine(DestroyGO(child.gameObject));
+        //    }
+        //}
     }
 
     IEnumerator DestroyGO(GameObject go) {
