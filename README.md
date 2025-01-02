@@ -1,4 +1,4 @@
 # Procedual-Halo-Ring
-A Procedual Halo Ring
+A Procedural Halo Ring
 
-![image](https://user-images.githubusercontent.com/34074715/123543780-18493480-d748-11eb-8dbe-7b0a3ec476e6.png)
+![image](https://github.com/user-attachments/assets/85592306-cf24-4697-9120-33f904a28f7b)
