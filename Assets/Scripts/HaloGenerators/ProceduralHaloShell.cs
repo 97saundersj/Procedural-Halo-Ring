@@ -149,7 +149,7 @@ public class ProceduralHaloShell : MonoBehaviour
         indices[startIndex + 13] = startVert + 1;     // Bottom of outer wall
         indices[startIndex + 14] = startVert + 6; // Bottom of next segment's inner wall
 
-                // Second Triangle for connecting the inside edge of the wall to the bottom edge of the ring
+        // Second Triangle for connecting the inside edge of the wall to the bottom edge of the ring
         indices[startIndex + 15] = startVert + 5;
         indices[startIndex + 16] = startVert + 6;
         indices[startIndex + 17] = startVert + 1;
@@ -168,8 +168,8 @@ public class ProceduralHaloShell : MonoBehaviour
             // Adjust UV coordinates based on the calculated scale
             uv[startVert] = new Vector2(segmentRatio * uvScaleX, 0);
             uv[startVert + 1] = new Vector2(segmentRatio * uvScaleX, 1);
-            uv[startVert + 2] = new Vector2(segmentRatio * uvScaleX, 1); // Wall bottom
-            uv[startVert + 3] = new Vector2(segmentRatio * uvScaleX, 1 + wallHeight / widthInMeters); // Wall top
+            uv[startVert + 2] = new Vector2(segmentRatio * uvScaleX, 0); // Wall bottom
+            uv[startVert + 3] = new Vector2(segmentRatio * uvScaleX, wallHeight / widthInMeters); // Wall top
         }
     }
 

@@ -165,6 +165,9 @@ public void GenerateSegmentVerticesAndIndices(int segment, List<Vector3> vertice
         Material newMaterial = new Material(Shader.Find("Standard"));
         newMaterial.mainTexture = proceduralTexture;
 
+        // Set the smoothness of the material
+        newMaterial.SetFloat("_Glossiness", 0.2f);
+
         return newMaterial;
     }
 
