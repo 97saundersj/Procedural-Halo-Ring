@@ -14,7 +14,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Public field for selecting rendering option
     public HaloRenderOption renderOption;
 
-    [Range(1, 256)]
+    [Range(1, 360)]
     public int CircleSegmentCount = 4;
 
     [Range(1, 300)]
@@ -46,6 +46,8 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public int seed;
 
+    public float heightMultiplier;
+
     public TerrainType[] regions;
 
     public bool autoUpdate;
@@ -59,6 +61,9 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     [Range(-1, 256)]
     public int specificSegmentIndex = -1; // -1 means create all segments
+
+    [Range(-1, 256)]
+    public int specificSegmentTerrainMeshIndex = -1; // -1 means create terrain meshes for all segments
 
     private void Awake()
     {
@@ -125,7 +130,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         // Create a new HaloSegment instance
         var haloSegment = new HaloSegment(this, segment);
 
-        var segmentObject = haloSegment.GenerateSegment(CircleSegmentCount, segment, segmentIndexCount, segmentVertexCount);
+        var segmentObject = haloSegment.GenerateSegment(segmentIndexCount, segmentVertexCount);
         segmentObject.transform.SetParent(segmentsParent.transform, false);
     }
 
@@ -177,6 +182,9 @@ public class ProceduralHaloChunks : MonoBehaviour
 
         // Adjust the range of specificSegmentIndex based on CircleSegmentCount
         specificSegmentIndex = Mathf.Clamp(specificSegmentIndex, -1, CircleSegmentCount);
+
+        // Adjust the range of specificSegmentIndex based on CircleSegmentCount
+        specificSegmentTerrainMeshIndex = Mathf.Clamp(specificSegmentTerrainMeshIndex, -1, CircleSegmentCount);
 
         if (autoUpdate && !Application.isPlaying)
         {
