@@ -73,4 +73,4 @@ ignoredProperties = "id;name;classname;imagecontentshash"
 helperWidgetCurrentArea = "all"
 disabledIndexers = ""
 minIndexVariations = 2
-findProviderIndexHelper = true{}
+findProviderIndexHelper = true
