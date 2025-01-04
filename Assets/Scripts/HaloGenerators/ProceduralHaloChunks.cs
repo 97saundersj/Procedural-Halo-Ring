@@ -113,28 +113,34 @@ public class ProceduralHaloChunks : MonoBehaviour
         else
         {
             // Create all segments
-            for (int segment = 0; segment < CircleSegmentCount; segment++)
+            CreateSegments(segmentIndexCount, segmentVertexCount);
+        }
+    }
+
+    // Make coroutine to visualise creation in editor, you will have to click constantly on the editer though
+    private void CreateSegmentsCoroutine(int segmentIndexCount, int segmentVertexCount)
+    {
+        for (int segment = 0; segment < CircleSegmentCount; segment++)
+        {
+            // Display cancelable progress bar
+            bool cancel = EditorUtility.DisplayCancelableProgressBar(
+                "Forging Halo Installation", 
+                $"Creating segment {segment + 1} of {CircleSegmentCount}", 
+                (float)segment / CircleSegmentCount
+            );
+
+            // Check if the user clicked the cancel button
+            if (cancel)
             {
-                // Display cancelable progress bar
-                bool cancel = EditorUtility.DisplayCancelableProgressBar(
-                    "Forging Halo Installation", 
-                    $"Creating segment {segment + 1} of {CircleSegmentCount}", 
-                    (float)segment / CircleSegmentCount
-                );
-
-                // Check if the user clicked the cancel button
-                if (cancel)
-                {
-                    Debug.Log("Operation canceled by the user.");
-                    break;
-                }
-
-                CreateSegment(segment, segmentIndexCount, segmentVertexCount);
+                Debug.Log("Operation canceled by the user.");
+                break;
             }
 
-            // Clear the progress bar after completion or cancellation
-            EditorUtility.ClearProgressBar();
+            CreateSegment(segment, segmentIndexCount, segmentVertexCount);
         }
+
+        // Clear the progress bar after completion or cancellation
+        EditorUtility.ClearProgressBar();
     }
 
     private void CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount)
