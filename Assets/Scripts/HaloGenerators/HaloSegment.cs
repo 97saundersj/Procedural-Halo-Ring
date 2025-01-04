@@ -178,11 +178,11 @@ public class HaloSegment
 
         // Set the bump map texture
         newMaterial.SetTexture("_BumpMap", normalMap);
-        newMaterial.SetFloat("_BumpScale", 1f);
+        newMaterial.SetFloat("_BumpScale", 0.5f);
         newMaterial.EnableKeyword("_NORMALMAP");
 
         // Set the smoothness of the material
-        newMaterial.SetFloat("_Glossiness", 0.2f);
+        newMaterial.SetFloat("_Glossiness", 0f);
 
         return newMaterial;
     }
