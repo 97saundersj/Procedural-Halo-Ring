@@ -1,74 +1,75 @@
 using UnityEngine;
 
-public class FlyCamera : MonoBehaviour
-{
-    float mainSpeed = 100.0f; // regular speed
-    float shiftAdd = 250.0f; // multiplied by how long shift is held. Basically running
-    float maxShift = 1000.0f; // Maximum speed when holding shift
-    private float totalRun = 1.0f;
-    private float initialHeight; // Store the initial height
+[RequireComponent( typeof(Camera) )]
+public class FlyCamera : MonoBehaviour {
+	public float acceleration = 50; // how fast you accelerate
+	public float accSprintMultiplier = 4; // how much faster you go when "sprinting"
+	public float lookSensitivity = 1; // mouse look sensitivity
+	public float dampingCoefficient = 5; // how quickly you break to a halt after you stop your input
+	public bool focusOnEnable = true; // whether or not to focus and lock cursor immediately on enable
 
-    void Start()
-    {
-        // Record the initial height of the camera
-        initialHeight = transform.localPosition.y;
-    }
+	Vector3 velocity; // current velocity
 
-    void Update()
-    {
-        // Keyboard commands
-        Vector3 p = GetBaseInput();
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            totalRun += Time.deltaTime;
-            p = p * totalRun * shiftAdd;
-            p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
-            p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
-            p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
-        }
-        else
-        {
-            totalRun = Mathf.Clamp(totalRun * 0.5f, 1f, 1000f);
-            p = p * mainSpeed;
-        }
+	static bool Focused {
+		get => Cursor.lockState == CursorLockMode.Locked;
+		set {
+			Cursor.lockState = value ? CursorLockMode.Locked : CursorLockMode.None;
+			Cursor.visible = value == false;
+		}
+	}
 
-        p = p * Time.deltaTime;
-        Vector3 newPosition = transform.localPosition + p;
+	void OnEnable() {
+		if( focusOnEnable ) Focused = true;
+	}
 
-        // Maintain the initial height
-        //newPosition.y = initialHeight;
+	void OnDisable() => Focused = false;
 
-        transform.localPosition = newPosition;
+	void Update() {
+		// Input
+		if( Focused )
+			UpdateInput();
+		else if( Input.GetMouseButtonDown( 0 ) )
+			Focused = true;
 
-    }
+		// Physics
+		velocity = Vector3.Lerp( velocity, Vector3.zero, dampingCoefficient * Time.deltaTime );
+		transform.position += velocity * Time.deltaTime;
+	}
 
-    private Vector3 GetBaseInput()
-    { // returns the basic values, if it's 0 then it's not active.
-        Vector3 p_Velocity = new Vector3();
-        if (Input.GetKey(KeyCode.W))
-        {
-            p_Velocity += new Vector3(0, 0, 1);
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            p_Velocity += new Vector3(0, 0, -1);
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            p_Velocity += new Vector3(0, 1, 0);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            p_Velocity += new Vector3(0, -1, 0);
-        }
-        if (Input.GetKey(KeyCode.LeftControl))
-        {
-            p_Velocity += new Vector3(-1, 0, 0);
-        }
-        if (Input.GetKey(KeyCode.Space))
-        {
-            p_Velocity += new Vector3(1, 0, 0);
-        }
-        return p_Velocity;
-    }
+	void UpdateInput() {
+		// Position
+		velocity += GetAccelerationVector() * Time.deltaTime;
+
+		// Rotation
+		Vector2 mouseDelta = lookSensitivity * new Vector2( Input.GetAxis( "Mouse X" ), -Input.GetAxis( "Mouse Y" ) );
+		Quaternion rotation = transform.localRotation;
+		Quaternion horiz = Quaternion.AngleAxis( mouseDelta.x, Vector3.up );
+		Quaternion vert = Quaternion.AngleAxis( mouseDelta.y, Vector3.right );
+		transform.localRotation = rotation * horiz * vert;
+
+		// Leave cursor lock
+		if( Input.GetKeyDown( KeyCode.Escape ) )
+			Focused = false;
+	}
+
+	Vector3 GetAccelerationVector() {
+		Vector3 moveInput = default;
+
+		void AddMovement( KeyCode key, Vector3 dir ) {
+			if( Input.GetKey( key ) )
+				moveInput += dir;
+		}
+
+		AddMovement( KeyCode.W, Vector3.forward );
+		AddMovement( KeyCode.S, Vector3.back );
+		AddMovement( KeyCode.D, Vector3.right );
+		AddMovement( KeyCode.A, Vector3.left );
+		AddMovement( KeyCode.Space, Vector3.up );
+		AddMovement( KeyCode.LeftControl, Vector3.down );
+		Vector3 direction = transform.TransformVector( moveInput.normalized );
+
+		if( Input.GetKey( KeyCode.LeftShift ) )
+			return direction * ( acceleration * accSprintMultiplier ); // "sprinting"
+		return direction * acceleration; // "walking"
+	}
 }

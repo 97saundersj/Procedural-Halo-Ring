@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Halo Generator.unity
-    guid: 5ca30e0c9d0ea0b49b089d4632d9adf0
+    path: Assets/Scenes/Halo.unity
+    guid: cdea34ea1e583c34c80324887cca23a1
   m_configObjects: {}

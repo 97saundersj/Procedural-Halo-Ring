@@ -1,7 +1,6 @@
-using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 
 public class ProceduralHaloChunks : MonoBehaviour
 {
@@ -66,12 +65,15 @@ public class ProceduralHaloChunks : MonoBehaviour
     [HideInInspector]
     public int maxSegmentIndex = 360; // Maximum segment index
 
-    /*
+    public bool generateOnPlay;
+
     private void Awake()
-    {
-        Generate();
+    { 
+        if (generateOnPlay)
+        {
+            Generate();
+        }
     }
-    */
 
     public void Generate()
     {
@@ -115,12 +117,13 @@ public class ProceduralHaloChunks : MonoBehaviour
     {
         for (int segment = 0; segment < CircleSegmentCount; segment++)
         {
-            // Display cancelable progress bar
+#if UNITY_EDITOR
             bool cancel = EditorUtility.DisplayCancelableProgressBar(
-                "Forging Halo Installation", 
-                $"Creating segment {segment + 1} of {CircleSegmentCount}", 
+                "Forging Halo Installation",
+                $"Creating segment {segment + 1} of {CircleSegmentCount}",
                 (float)segment / CircleSegmentCount
             );
+
 
             // Check if the user clicked the cancel button
             if (cancel)
@@ -128,12 +131,14 @@ public class ProceduralHaloChunks : MonoBehaviour
                 Debug.Log("Operation canceled by the user.");
                 break;
             }
-
+#endif
             CreateSegment(segment, segmentIndexCount, segmentVertexCount);
         }
 
         // Clear the progress bar after completion or cancellation
+#if UNITY_EDITOR
         EditorUtility.ClearProgressBar();
+#endif
     }
 
     private void CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount)
@@ -146,29 +151,29 @@ public class ProceduralHaloChunks : MonoBehaviour
     }
 
     private void DeletePreviousTextureFiles()
-{
-    string directoryPath = Application.dataPath + "/ProceduralTextures/";
-    if (System.IO.Directory.Exists(directoryPath))
     {
-        string[] files = System.IO.Directory.GetFiles(directoryPath, "*.png");
-        foreach (string file in files)
+        string directoryPath = Application.dataPath + "/ProceduralTextures/";
+        if (System.IO.Directory.Exists(directoryPath))
         {
-            try
+            string[] files = System.IO.Directory.GetFiles(directoryPath, "*.png");
+            foreach (string file in files)
             {
-                System.IO.File.Delete(file);
-                Debug.Log("Deleted file: " + file);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError("Failed to delete file: " + file + " Error: " + e.Message);
+                try
+                {
+                    System.IO.File.Delete(file);
+                    Debug.Log("Deleted file: " + file);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError("Failed to delete file: " + file + " Error: " + e.Message);
+                }
             }
         }
+        else
+        {
+            Debug.LogWarning("Directory does not exist: " + directoryPath);
+        }
     }
-    else
-    {
-        Debug.LogWarning("Directory does not exist: " + directoryPath);
-    }
-}
 
     private void DeletePreviousSegments()
     {
@@ -179,11 +184,12 @@ public class ProceduralHaloChunks : MonoBehaviour
         }
     }
 
-    IEnumerator DestroyGO(GameObject go) {
+    IEnumerator DestroyGO(GameObject go)
+    {
         yield return new WaitForSeconds(0);
         DestroyImmediate(go);
     }
-    
+
     void OnValidate()
     {
         if (autoUpdate && !Application.isPlaying)
