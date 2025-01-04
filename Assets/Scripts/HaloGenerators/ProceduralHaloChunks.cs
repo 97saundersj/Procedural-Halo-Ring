@@ -61,11 +61,10 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     private GameObject segmentsParent;
 
-    [Range(-1, 360)]
-    public int specificSegmentIndex = -1; // -1 means create all segments
-
-    [Range(-1, 360)]
-    public int specificSegmentTerrainMeshIndex = -1; // -1 means create terrain meshes for all segments
+    [HideInInspector]
+    public int minSegmentIndex = -1; // Minimum segment index
+    [HideInInspector]
+    public int maxSegmentIndex = 360; // Maximum segment index
 
     /*
     private void Awake()
@@ -104,21 +103,15 @@ public class ProceduralHaloChunks : MonoBehaviour
         int segmentVertexCount = (segmentXVertices + 1) * segmentYVertices;
         int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
 
-        // Check if a specific segment index is set
-        if (specificSegmentIndex >= 0 && specificSegmentIndex < CircleSegmentCount)
+        // Create segments within the specified range
+        for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(CircleSegmentCount - 1, maxSegmentIndex); i++)
         {
-            // Create only the specified segment
-            CreateSegment(specificSegmentIndex, segmentIndexCount, segmentVertexCount);
-        }
-        else
-        {
-            // Create all segments
-            CreateSegments(segmentIndexCount, segmentVertexCount);
+            CreateSegment(i, segmentIndexCount, segmentVertexCount);
         }
     }
 
     // Make coroutine to visualise creation in editor, you will have to click constantly on the editer though
-    private void CreateSegmentsCoroutine(int segmentIndexCount, int segmentVertexCount)
+    private void CreateSegments(int segmentIndexCount, int segmentVertexCount)
     {
         for (int segment = 0; segment < CircleSegmentCount; segment++)
         {
@@ -193,17 +186,6 @@ public class ProceduralHaloChunks : MonoBehaviour
     
     void OnValidate()
     {
-        if (CircleSegmentCount < 1)
-        {
-            CircleSegmentCount = 1;
-        }
-
-        // Adjust the range of specificSegmentIndex based on CircleSegmentCount
-        specificSegmentIndex = Mathf.Clamp(specificSegmentIndex, -1, CircleSegmentCount);
-
-        // Adjust the range of specificSegmentIndex based on CircleSegmentCount
-        specificSegmentTerrainMeshIndex = Mathf.Clamp(specificSegmentTerrainMeshIndex, -1, CircleSegmentCount);
-
         if (autoUpdate && !Application.isPlaying)
         {
             Generate();
