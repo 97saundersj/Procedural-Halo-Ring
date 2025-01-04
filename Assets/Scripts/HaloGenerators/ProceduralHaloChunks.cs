@@ -1,19 +1,10 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 
 public class ProceduralHaloChunks : MonoBehaviour
 {
-    // Enum for rendering options
-    public enum HaloRenderOption
-    {
-        Inside,
-        Outside
-    }
-
-    // Public field for selecting rendering option
-    public HaloRenderOption renderOption;
-
     [Range(1, 360)]
     public int CircleSegmentCount = 4;
 
@@ -23,15 +14,19 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(0.1f, 10000f)]
     public float radiusInMeters = 10000f;
 
-    [Range(2, 256)]
+    // Anything higher than 5 breaks everything
+    [Range(2, 87)]
     public int segmentXVertices = 16; // Number of vertices along the X axis
 
-    [Range(2, 256)]
+    // Anything higher than 5 breaks everything
+    [Range(2, 87)]
     public int segmentYVertices = 2; // Number of vertices along the Y axis (top and bottom)
 
     // Procedural Terrain
-    [Range(1, 16)]
-    public int textureMetersPerPixel = 4;
+
+    // Anything higher than 5 breaks everything
+    [Range(1, 5)]
+    public int textureMetersPerPixel = 5;
 
     public bool saveTexturesFiles;
 
@@ -44,9 +39,12 @@ public class ProceduralHaloChunks : MonoBehaviour
     public float persistance;
     public float lacunarity;
 
+    [Range(0, 64)]
     public int seed;
 
+    [Range(-1, 1000)]
     public float heightMultiplier;
+    public AnimationCurve meshHeightCurve;
 
     public TerrainType[] regions;
 
@@ -54,30 +52,27 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     [HideInInspector]
     public float circumference;
+
+    [HideInInspector]
+    public int mapChunkfactor = 24;
+
     [HideInInspector]
     public float uvScaleX;
 
     private GameObject segmentsParent;
 
-    [Range(-1, 256)]
+    [Range(-1, 360)]
     public int specificSegmentIndex = -1; // -1 means create all segments
 
-    [Range(-1, 256)]
+    [Range(-1, 360)]
     public int specificSegmentTerrainMeshIndex = -1; // -1 means create terrain meshes for all segments
 
+    /*
     private void Awake()
     {
         Generate();
     }
-
-    private void Update()
-    {
-        // Regenerate mesh if parameters are invalid
-        if (CircleSegmentCount < 3 || widthInMeters <= 0 || radiusInMeters <= 0)
-        {
-            Generate();
-        }
-    }
+    */
 
     public void Generate()
     {
@@ -120,8 +115,25 @@ public class ProceduralHaloChunks : MonoBehaviour
             // Create all segments
             for (int segment = 0; segment < CircleSegmentCount; segment++)
             {
+                // Display cancelable progress bar
+                bool cancel = EditorUtility.DisplayCancelableProgressBar(
+                    "Forging Halo Installation", 
+                    $"Creating segment {segment + 1} of {CircleSegmentCount}", 
+                    (float)segment / CircleSegmentCount
+                );
+
+                // Check if the user clicked the cancel button
+                if (cancel)
+                {
+                    Debug.Log("Operation canceled by the user.");
+                    break;
+                }
+
                 CreateSegment(segment, segmentIndexCount, segmentVertexCount);
             }
+
+            // Clear the progress bar after completion or cancellation
+            EditorUtility.ClearProgressBar();
         }
     }
 

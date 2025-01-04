@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 //terrainGenerator by https://www.youtube.com/@SebastianLague on https://youtube.com/playlist?list=PLFt_AvWsXl0eBW2EiBtl_sxmDtSgZBxB3&si=nUjByP-UTCn8Kv7a
 public static class Noise
 {
@@ -7,7 +6,7 @@ public static class Noise
 
     public enum NormalizeMode { Local, Global };
 
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, AnimationCurve heightCurve = null, float heightMultiplier = 1)
     {
         Vector2 sampleCentre = new Vector2(0, 0);
         var normalizeMode = NormalizeMode.Global;
@@ -60,7 +59,16 @@ public static class Noise
                 {
                     minLocalNoiseHeight = noiseHeight;
                 }
-                noiseMap[x, y] = noiseHeight;
+
+                if (heightCurve != null)
+                {
+                    noiseMap[x, y] = heightCurve.Evaluate(noiseHeight) * heightMultiplier;
+                }
+                else
+                {
+                    noiseMap[x, y] = noiseHeight;
+                }
+
                 if (normalizeMode == NormalizeMode.Global)
                 {
                     float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight / 0.9f);
@@ -68,6 +76,7 @@ public static class Noise
                 }
             }
         }
+
         if (normalizeMode == NormalizeMode.Local)
         {
             for (int y = 0; y < mapHeight; y++)
