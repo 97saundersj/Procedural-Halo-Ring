@@ -14,11 +14,11 @@ public class ProceduralHaloChunks : MonoBehaviour
     public float radiusInMeters = 10000f;
 
     // Anything higher than 5 breaks everything
-    [Range(2, 87)]
+    [Range(2, 255)]
     public int segmentXVertices = 16; // Number of vertices along the X axis
 
     // Anything higher than 5 breaks everything
-    [Range(2, 87)]
+    [Range(2, 255)]
     public int segmentYVertices = 2; // Number of vertices along the Y axis (top and bottom)
 
     // Procedural Terrain

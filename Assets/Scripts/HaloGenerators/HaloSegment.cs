@@ -61,7 +61,9 @@ public class HaloSegment
         float angleStep = segmentWidth / segmentXVertices;
         float startAngle = segment * segmentWidth;
 
-        // Create vertices for the segment
+        int noiseMapWidth = noiseMap.GetLength(0);
+        int noiseMapHeight = noiseMap.GetLength(1);
+
         for (int x = 0; x <= segmentXVertices; x++)
         {
             float angle = startAngle + x * angleStep;
@@ -69,14 +71,13 @@ public class HaloSegment
             {
                 float width = y * (widthInMeters / (segmentYVertices - 1));
 
-                // Access noise map correctly
-                float noiseValue = noiseMap[segmentXVertices - x, y];
-                float offset = noiseValue * heightMultiplier;
+                // Flip the noise map on x-axis
+                int noiseX = noiseMapHeight - 1 - (int)((float)y / segmentYVertices * (noiseMapHeight - 1));
+                int noiseY = (int)((float)x / segmentXVertices * (noiseMapWidth - 1));
 
-                // Calculate adjusted radius
-                float adjustedRadius = radiusInMeters - offset;
+                float noiseValue = noiseMap[noiseY, noiseX]; // Access flipped x indices
+                float adjustedRadius = radiusInMeters - heightMultiplier * noiseValue;
 
-                // Add vertex to the list
                 vertices.Add(new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius));
             }
         }
@@ -270,5 +271,20 @@ public class HaloSegment
         {
             return TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight);
         }
+    }
+
+    // New method to generate a noise map for vertex adjustment
+    private float[,] GenerateNoiseMap(int width, int height)
+    {
+        // Implement noise generation logic here
+        float[,] noiseMap = new float[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                noiseMap[x, y] = Mathf.PerlinNoise(x * 0.1f, y * 0.1f); // Example noise generation
+            }
+        }
+        return noiseMap;
     }
 }
