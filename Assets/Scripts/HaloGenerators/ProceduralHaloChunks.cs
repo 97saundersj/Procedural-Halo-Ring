@@ -43,6 +43,12 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     [Range(-1, 1000)]
     public float heightMultiplier;
+
+    public AnimationCurve heightCurve;
+
+    [Range(-1, 1000)]
+    public float meshHeightMultiplier;
+
     public AnimationCurve meshHeightCurve;
 
     public TerrainType[] regions;
@@ -52,8 +58,8 @@ public class ProceduralHaloChunks : MonoBehaviour
     [HideInInspector]
     public float circumference;
 
-    [HideInInspector]
-    public int mapChunkfactor = 24;
+    //[HideInInspector]
+    //public int mapChunkfactor = 24;
 
     [HideInInspector]
     public float uvScaleX;

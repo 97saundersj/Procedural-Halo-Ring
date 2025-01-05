@@ -36,7 +36,8 @@ public class HaloSegment
         segmentObject.AddComponent<MeshRenderer>().material = CreateMaterial(noiseMap, proceduralTexture);
 
         // Generate vertices and indices for this segment
-        GenerateSegmentVerticesAndIndices(segment, vertices, indices, noiseMap);
+        GenerateSegmentVertices(segment, vertices, noiseMap);
+        GenerateSegmentIndices(indices);
 
         // Calculate UVs for this segment
         CalculateSegmentUVs(uv);
@@ -47,9 +48,9 @@ public class HaloSegment
         return segmentObject;
     }
 
-    public void GenerateSegmentVerticesAndIndices(int segment, List<Vector3> vertices, int[] indices, float[,] noiseMap)
+    public void GenerateSegmentVertices(int segment, List<Vector3> vertices, float[,] noiseMap)
     {
-        float heightMultiplier = proceduralHaloChunks.heightMultiplier;
+        float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
 
         int segmentXVertices = proceduralHaloChunks.segmentXVertices;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices;
@@ -61,36 +62,44 @@ public class HaloSegment
         float startAngle = segment * segmentWidth;
 
         // Create vertices for the segment
-        for (int i = 0; i <= segmentXVertices; i++)
+        for (int x = 0; x <= segmentXVertices; x++)
         {
-            float angle = startAngle + i * angleStep;
-            for (int j = 0; j < segmentYVertices; j++)
+            float angle = startAngle + x * angleStep;
+            for (int y = 0; y < segmentYVertices; y++)
             {
-                float width = j * (widthInMeters / (segmentYVertices - 1));
+                float width = y * (widthInMeters / (segmentYVertices - 1));
 
-                // We have to flip the noise for some reason, it might be my uvs are wrong
-                float noiseValue = noiseMap[segmentXVertices - i, j];
-                float offset = 0; //noiseValue * heightMultiplier;
+                // Access noise map correctly
+                float noiseValue = noiseMap[segmentXVertices - x, y];
+                float offset = noiseValue * heightMultiplier;
 
-                // Move the vertex towards the center based on the noise value and height multiplier
+                // Calculate adjusted radius
                 float adjustedRadius = radiusInMeters - offset;
+
+                // Add vertex to the list
                 vertices.Add(new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius));
             }
         }
+    }
+
+    public void GenerateSegmentIndices(int[] indices)
+    {
+        int segmentXVertices = proceduralHaloChunks.segmentXVertices;
+        int segmentYVertices = proceduralHaloChunks.segmentYVertices;
 
         // Create indices for the segment
-        for (int i = 0; i < segmentXVertices; i++)
+        for (int x = 0; x < segmentXVertices; x++)
         {
-            for (int j = 0; j < segmentYVertices - 1; j++)
+            for (int y = 0; y < segmentYVertices - 1; y++)
             {
-                int baseIndex = i * segmentYVertices + j;
+                int baseIndex = x * segmentYVertices + y;
                 // Reverse the order of indices for inside rendering
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 0] = baseIndex;
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 1] = baseIndex + segmentYVertices;
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 2] = baseIndex + 1;
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 3] = baseIndex + 1;
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 4] = baseIndex + segmentYVertices;
-                indices[(i * (segmentYVertices - 1) + j) * 6 + 5] = baseIndex + segmentYVertices + 1;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 0] = baseIndex;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 1] = baseIndex + segmentYVertices;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 2] = baseIndex + 1;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 3] = baseIndex + 1;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 4] = baseIndex + segmentYVertices;
+                indices[(x * (segmentYVertices - 1) + y) * 6 + 5] = baseIndex + segmentYVertices + 1;
             }
         }
     }
@@ -227,7 +236,7 @@ public class HaloSegment
         float lacunarity = proceduralHaloChunks.lacunarity;
         Vector2 offset = new(segment * widthScale, 0);
 
-        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, proceduralHaloChunks.meshHeightCurve, proceduralHaloChunks.heightMultiplier);
+        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, proceduralHaloChunks.heightCurve, proceduralHaloChunks.heightMultiplier);
     }
 
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
