@@ -14,10 +14,18 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
+    # Cache
+    - uses: actions/cache@v3
+      with:
+        path: Library
+        key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+        restore-keys: |
+          Library-
+            
     - name: Set up Unity
-      uses: game-ci/unity-builder@v2
+      uses: game-ci/unity-builder@v4.3.0
       with:
         unityVersion: 2022.3.55  # Change this to your project's Unity version
         targetPlatform: WebGL
