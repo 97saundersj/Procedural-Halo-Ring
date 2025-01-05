@@ -1,0 +1,38 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch if it's not 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Unity
+      uses: game-ci/unity-builder@v2
+      with:
+        unityVersion: 2022.3.55  # Change this to your project's Unity version
+        targetPlatform: WebGL
+
+    - name: Build WebGL
+      run: |
+        mkdir -p build
+        /opt/Unity/Editor/Unity \
+          -projectPath . \
+          -quit \
+          -batchmode \
+          -nographics \
+          -buildTarget WebGL \
+          -executeMethod BuildScript.BuildWebGL \
+          -logFile /dev/stdout
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build/WebGL
