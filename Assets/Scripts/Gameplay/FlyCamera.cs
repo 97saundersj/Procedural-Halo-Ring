@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
+[RequireComponent(typeof(Rigidbody))]
 public class FlyCamera : MonoBehaviour
 {
     public float acceleration = 50; // how fast you accelerate
@@ -10,9 +11,11 @@ public class FlyCamera : MonoBehaviour
 
     public bool focusOnEnable = true; // whether or not to focus and lock cursor immediately on enable
 
-    public float mouseMovementThreshold = 5f; // Define a threshold for mouse movement
+    public float mouseMovementThreshold = 20f; // Define a threshold for mouse movement
 
     Vector3 velocity; // current velocity
+
+    Rigidbody rb; // Reference to the Rigidbody
 
     static bool Focused
     {
@@ -22,6 +25,13 @@ public class FlyCamera : MonoBehaviour
             Cursor.lockState = value ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = value == false;
         }
+    }
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false; // Disable gravity if you want the camera to fly
+        rb.isKinematic = false; // Ensure the Rigidbody is not kinematic
     }
 
     void OnEnable()
@@ -41,7 +51,7 @@ public class FlyCamera : MonoBehaviour
 
         // Physics
         velocity = Vector3.Lerp(velocity, Vector3.zero, dampingCoefficient * Time.deltaTime);
-        transform.position += velocity * Time.deltaTime;
+        rb.velocity = velocity;
     }
 
     void UpdateInput()

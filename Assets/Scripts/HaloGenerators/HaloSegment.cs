@@ -5,31 +5,36 @@ public class HaloSegment
 {
     private ProceduralHaloChunks proceduralHaloChunks;
     private int segment;
+    public int levelOfDetail;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment)
+    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment, int levelOfDetail)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
         this.segment = segment;
+        this.levelOfDetail = levelOfDetail;
     }
 
     public GameObject GenerateSegment(int segmentIndexCount, int segmentVertexCount)
     {
-        GameObject segmentObject = new GameObject("HaloSegment_" + segment);
+        GameObject segmentObject = new GameObject(segment.ToString());
 
-        var vertices = new List<Vector3>(segmentVertexCount);
-        var uv = new Vector2[segmentVertexCount];
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
+        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
+
+        // Calculate the correct number of vertices
+        int totalVertices = (segmentXVertices + 1) * segmentYVertices;
+
+        var vertices = new List<Vector3>(totalVertices);
+        var uv = new Vector2[totalVertices];
         var indices = new int[segmentIndexCount];
 
         var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount;
-        Debug.Log("segmentWidth: " + segmentWidth);
 
         float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
         float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
 
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
-
-        //Create HeightMap
-        //var heightMap = CreateTexture(widthScale, heightScale, noiseMap, true);
 
         // Generate Procedural Texture
         var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap, false);
@@ -40,11 +45,18 @@ public class HaloSegment
         GenerateSegmentIndices(indices);
 
         // Calculate UVs for this segment
-        CalculateSegmentUVs(uv);
+        CalculateSegmentUVs(uv, segmentXVertices, segmentYVertices);
 
         // Set mesh data for this segment
-        segmentObject.AddComponent<MeshFilter>().mesh = GenerateMesh(vertices, uv, indices);
+        Mesh segmentMesh = GenerateMesh(vertices, uv, indices);
+        segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
 
+        // Add a MeshCollider to the segment
+        if (levelOfDetail == 0)
+        {
+            segmentObject.AddComponent<MeshCollider>().sharedMesh = segmentMesh;
+        }
+        
         return segmentObject;
     }
 
@@ -52,8 +64,9 @@ public class HaloSegment
     {
         float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
 
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices;
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
+        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
         float widthInMeters = proceduralHaloChunks.widthInMeters;
         float radiusInMeters = proceduralHaloChunks.radiusInMeters;
 
@@ -71,11 +84,10 @@ public class HaloSegment
             {
                 float width = y * (widthInMeters / (segmentYVertices - 1));
 
-                // Flip the noise map on x-axis
                 int noiseX = noiseMapHeight - 1 - (int)((float)y / segmentYVertices * (noiseMapHeight - 1));
                 int noiseY = (int)((float)x / segmentXVertices * (noiseMapWidth - 1));
 
-                float noiseValue = noiseMap[noiseY, noiseX]; // Access flipped x indices
+                float noiseValue = noiseMap[noiseY, noiseX];
                 float adjustedRadius = radiusInMeters - heightMultiplier * noiseValue;
 
                 vertices.Add(new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius));
@@ -85,16 +97,15 @@ public class HaloSegment
 
     public void GenerateSegmentIndices(int[] indices)
     {
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices;
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
+        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
 
-        // Create indices for the segment
         for (int x = 0; x < segmentXVertices; x++)
         {
             for (int y = 0; y < segmentYVertices - 1; y++)
             {
                 int baseIndex = x * segmentYVertices + y;
-                // Reverse the order of indices for inside rendering
                 indices[(x * (segmentYVertices - 1) + y) * 6 + 0] = baseIndex;
                 indices[(x * (segmentYVertices - 1) + y) * 6 + 1] = baseIndex + segmentYVertices;
                 indices[(x * (segmentYVertices - 1) + y) * 6 + 2] = baseIndex + 1;
@@ -105,18 +116,14 @@ public class HaloSegment
         }
     }
 
-    public void CalculateSegmentUVs(Vector2[] uv)
+    public void CalculateSegmentUVs(Vector2[] uv, int segmentXVertices, int segmentYVertices)
     {
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices;
-
-        // Set the UVs to cover the entire texture for each segment
         for (int i = 0; i <= segmentXVertices; i++)
         {
-            float u = (float)i / segmentXVertices; // U coordinate ranges from 0 to 1
+            float u = (float)i / segmentXVertices;
             for (int j = 0; j < segmentYVertices; j++)
             {
-                float v = 1.0f - (float)j / (segmentYVertices - 1); // V coordinate ranges from 0 to 1
+                float v = 1.0f - (float)j / (segmentYVertices - 1);
                 uv[i * segmentYVertices + j] = new Vector2(u, v);
             }
         }
@@ -124,7 +131,7 @@ public class HaloSegment
 
     private Texture2D CreateTexture(float widthScale, float heightScale, float[,] noiseMap, bool createHeightMap)
     {
-        Debug.Log("Updating segment Texture...");
+        //Debug.Log("Updating segment Texture...");
 
         Texture2D proceduralTexture = GenerateProceduralNoiseTexture(widthScale, heightScale, noiseMap, createHeightMap);
         proceduralTexture.wrapMode = TextureWrapMode.Clamp;
@@ -170,7 +177,7 @@ public class HaloSegment
 
     private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture)
     {
-        Debug.Log("Updating segment material...");
+        //Debug.Log("Updating segment material...");
 
         // Create a new material instance for this segment
         Material newMaterial = new Material(Shader.Find("Standard"));
@@ -184,12 +191,12 @@ public class HaloSegment
         //newMaterial.SetFloat("_Parallax", 0.02f); // Adjust the parallax scale as needed
 
         // Convert heightMap to a normal map
-        Texture2D normalMap = ConvertNoiseMapToNormalMap(heightMap);
+        //Texture2D normalMap = ConvertNoiseMapToNormalMap(heightMap);
 
         // Set the bump map texture
-        newMaterial.SetTexture("_BumpMap", normalMap);
-        newMaterial.SetFloat("_BumpScale", 0.5f);
-        newMaterial.EnableKeyword("_NORMALMAP");
+        //newMaterial.SetTexture("_BumpMap", normalMap);
+        //newMaterial.SetFloat("_BumpScale", 0.5f);
+        //newMaterial.EnableKeyword("_NORMALMAP");
 
         // Set the smoothness of the material
         newMaterial.SetFloat("_Glossiness", 0f);
@@ -243,20 +250,41 @@ public class HaloSegment
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
     private Texture2D GenerateProceduralNoiseTexture(float widthScale, float heightScale, float[,] noiseMap, bool createHeightMap)
     {
-        int mapWidth = noiseMap.GetLength(0);
-        var mapHeight = noiseMap.GetLength(1);
+        // Adjust the resolution based on levelOfDetail
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int mapWidth = noiseMap.GetLength(0) / detailFactor;
+        int mapHeight = noiseMap.GetLength(1) / detailFactor;
 
         Color[] colourMap = new Color[mapWidth * mapHeight];
+        Texture2D[] regionTextures = new Texture2D[proceduralHaloChunks.regions.Length];
+
+        // Load or assign textures for each region
+        for (int i = 0; i < proceduralHaloChunks.regions.Length; i++)
+        {
+            regionTextures[i] = proceduralHaloChunks.regions[i].texture; // Assuming each region has a 'texture' property
+        }
+
         for (int y = 0; y < mapHeight; y++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                float currentHeight = noiseMap[x, y];
+                float currentHeight = noiseMap[x * detailFactor, y * detailFactor];
                 for (int i = 0; i < proceduralHaloChunks.regions.Length; i++)
                 {
                     if (currentHeight <= proceduralHaloChunks.regions[i].height)
                     {
-                        colourMap[y * mapWidth + x] = proceduralHaloChunks.regions[i].colour;
+                        // Check if the texture is not null before using it
+                        if (regionTextures[i] != null)
+                        {
+                            // Apply the texture of the region
+                            Color textureColor = regionTextures[i].GetPixelBilinear((float)x / mapWidth, (float)y / mapHeight);
+                            colourMap[y * mapWidth + x] = textureColor;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Texture for region {i} is null. Using default color.");
+                            colourMap[y * mapWidth + x] = Color.white; // or any default color
+                        }
                         break;
                     }
                 }

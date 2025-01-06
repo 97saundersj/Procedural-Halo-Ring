@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,8 +25,8 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Procedural Terrain
 
     // Anything higher than 5 breaks everything
-    [Range(1, 5)]
-    public int textureMetersPerPixel = 5;
+    [Range(0.01f, 5)]
+    public float textureMetersPerPixel = 5;
 
     public bool saveTexturesFiles;
 
@@ -73,6 +74,13 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public bool generateOnPlay;
 
+    private List<GameObject> createdSegments = new List<GameObject>(); // List to store created segments
+    private List<int> closestSegmentIndices = new List<int>(); // Change to a list to store multiple indices
+    
+    public GameObject player; // Reference to the player GameObject
+
+    public float proximityThreshold = 300f; // Add this line to define a threshold distance
+
     private void Awake()
     { 
         if (generateOnPlay)
@@ -83,6 +91,7 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public void Generate()
     {
+        createdSegments.Clear(); // Clear the list before generating new segments
         GenerateCircleMesh();
     }
 
@@ -114,7 +123,8 @@ public class ProceduralHaloChunks : MonoBehaviour
         // Create segments within the specified range
         for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(CircleSegmentCount - 1, maxSegmentIndex); i++)
         {
-            CreateSegment(i, segmentIndexCount, segmentVertexCount);
+            var segmentObject = CreateSegment(i, segmentIndexCount, segmentVertexCount, levelOfDetail);
+            createdSegments.Add(segmentObject); // Add the created segment to the list
         }
     }
 
@@ -138,7 +148,7 @@ public class ProceduralHaloChunks : MonoBehaviour
                 break;
             }
 #endif
-            CreateSegment(segment, segmentIndexCount, segmentVertexCount);
+            CreateSegment(segment, segmentIndexCount, segmentVertexCount, levelOfDetail);
         }
 
         // Clear the progress bar after completion or cancellation
@@ -147,13 +157,15 @@ public class ProceduralHaloChunks : MonoBehaviour
 #endif
     }
 
-    private void CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount)
+    private GameObject CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount, int lod)
     {
         // Create a new HaloSegment instance
-        var haloSegment = new HaloSegment(this, segment);
+        var haloSegment = new HaloSegment(this, segment, lod);
 
         var segmentObject = haloSegment.GenerateSegment(segmentIndexCount, segmentVertexCount);
         segmentObject.transform.SetParent(segmentsParent.transform, false);
+
+        return segmentObject; // Return the created segment
     }
 
     private void DeletePreviousTextureFiles()
@@ -201,6 +213,68 @@ public class ProceduralHaloChunks : MonoBehaviour
         if (autoUpdate && !Application.isPlaying)
         {
             Generate();
+        }
+    }
+
+    private void Start()
+    {
+        StartCoroutine(CheckPlayerProximityRoutine());
+    }
+
+    private IEnumerator CheckPlayerProximityRoutine()
+    {
+        while (true)
+        {
+            CheckPlayerProximity();
+            yield return new WaitForSeconds(1f); // Wait for 1 second before checking again
+        }
+    }
+
+    private void CheckPlayerProximity()
+    {
+        if (player == null) return;
+
+        GameObject closestSegment = null;
+        float minDistance = float.MaxValue;
+        int newClosestSegmentIndex = -1;
+
+        for (int i = 0; i < createdSegments.Count; i++)
+        {
+            if (closestSegmentIndices.Contains(i)) continue;
+
+            var segment = createdSegments[i];
+            MeshRenderer meshRenderer = segment.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                Vector3 closestPoint = meshRenderer.bounds.ClosestPoint(player.transform.position);
+                float distance = Vector3.Distance(player.transform.position, closestPoint);
+
+                if (distance < minDistance && distance <= proximityThreshold)
+                {
+                    minDistance = distance;
+                    closestSegment = segment;
+                    newClosestSegmentIndex = i;
+                }
+            }
+        }
+
+        if (closestSegment != null && newClosestSegmentIndex != -1)
+        {
+            closestSegmentIndices.Add(newClosestSegmentIndex);
+            Debug.Log($"Closest segment is {closestSegment.name} with a distance of {minDistance}");
+
+            // Calculate vertex and index counts for a single segment
+            int segmentVertexCount = (segmentXVertices + 1) * segmentYVertices;
+            int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
+
+            // Create a new segment
+            GameObject newSegment = CreateSegment(int.Parse(closestSegment.name), segmentIndexCount, segmentVertexCount, 0);
+
+            // Replace the old segment with the new one in the list
+            createdSegments[newClosestSegmentIndex] = newSegment;
+
+            // Optionally, destroy the old segment
+            DestroyImmediate(closestSegment);
         }
     }
 }

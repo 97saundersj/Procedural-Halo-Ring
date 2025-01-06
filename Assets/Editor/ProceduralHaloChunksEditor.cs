@@ -19,9 +19,20 @@ public class ProceduralHaloChunksEditor : Editor
         float minIndex = proceduralHaloChunks.minSegmentIndex;
         float maxIndex = proceduralHaloChunks.maxSegmentIndex;
 
-        // Create a min-max slider for segment indices
+        // Create a horizontal layout for the number inputs and slider
         EditorGUILayout.LabelField("Segment Index Range");
+        EditorGUILayout.BeginHorizontal();
+        
+        // Create number input for min index
+        minIndex = EditorGUILayout.FloatField(minIndex, GUILayout.Width(50));
+
+        // Create a min-max slider for segment indices
         EditorGUILayout.MinMaxSlider(ref minIndex, ref maxIndex, 0f, proceduralHaloChunks.CircleSegmentCount);
+
+        // Create number input for max index
+        maxIndex = EditorGUILayout.FloatField(maxIndex, GUILayout.Width(50));
+
+        EditorGUILayout.EndHorizontal();
 
         // Convert the float values back to integers
         proceduralHaloChunks.minSegmentIndex = Mathf.RoundToInt(minIndex);

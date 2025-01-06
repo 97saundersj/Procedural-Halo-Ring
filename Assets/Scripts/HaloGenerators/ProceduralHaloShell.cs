@@ -28,8 +28,16 @@ public class ProceduralHaloShell : MonoBehaviour
     
     private Mesh mesh;
 
+    private MeshCollider meshCollider;
+
     private void Awake()
     {
+        // Ensure the GameObject has a MeshFilter component
+        if (GetComponent<MeshFilter>() == null)
+        {
+            gameObject.AddComponent<MeshFilter>();
+        }
+
         Generate();
     }
 
@@ -44,10 +52,22 @@ public class ProceduralHaloShell : MonoBehaviour
 
     private void Generate()
     {
+        // Initialize the mesh
         mesh = new Mesh { name = "Procedural Halo" };
 
+        // Assign the mesh to the MeshFilter
         GetComponent<MeshFilter>().mesh = mesh;
+
+        // Generate the mesh geometry
         GenerateCircleMesh();
+
+        // Collider
+        if (meshCollider == null)
+        {
+            meshCollider = gameObject.AddComponent<MeshCollider>();
+        }
+        
+        meshCollider.sharedMesh = mesh; // Update the MeshCollider with the new mesh
     }
 
     private void GenerateCircleMesh()
@@ -191,7 +211,7 @@ public class ProceduralHaloShell : MonoBehaviour
 
         if (!Application.isPlaying)
         {
-            Generate();
+        Generate();
         }
     }
 }
