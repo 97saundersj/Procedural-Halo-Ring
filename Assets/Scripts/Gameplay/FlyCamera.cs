@@ -43,6 +43,13 @@ public class FlyCamera : MonoBehaviour
 
     void Update()
     {
+        // Check if the game is paused
+        if (Time.timeScale == 0f)
+        {
+            Focused = false;
+            return;
+        }
+
         // Input
         if (Focused)
             UpdateInput();

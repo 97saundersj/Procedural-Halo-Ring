@@ -6,8 +6,11 @@ public static class Noise
 
     public enum NormalizeMode { Local, Global };
 
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, AnimationCurve heightCurve = null, float heightMultiplier = 1)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, AnimationCurve heightCurve = null, float heightMultiplier = 1, int levelOfDetail = 0)
     {
+        // Adjust the resolution based on levelOfDetail
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+
         Vector2 sampleCentre = new Vector2(0, 0);
         var normalizeMode = NormalizeMode.Global;
 
@@ -42,8 +45,8 @@ public static class Noise
                 float noiseHeight = 0;
                 for (int i = 0; i < octaves; i++)
                 {
-                    float sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x * frequency;
-                    float sampleY = (y - halfHeight) / scale * frequency - octaveOffsets[i].y * frequency;
+                    float sampleX = ((x * detailFactor) - halfWidth) / scale * frequency + octaveOffsets[i].x * frequency;
+                    float sampleY = ((y * detailFactor) - halfHeight) / scale * frequency - octaveOffsets[i].y * frequency;
 
                     float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
                     noiseHeight += perlinValue * amplitude;
