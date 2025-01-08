@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-public class HaloSegment
+public class HaloSegment : MonoBehaviour
 {
     private ProceduralHaloChunks proceduralHaloChunks;
     private int segment;
@@ -16,10 +18,8 @@ public class HaloSegment
         this.meshLevelOfDetail = meshLevelOfDetail;
     }
 
-    public GameObject GenerateSegment(int segmentIndexCount, int segmentVertexCount)
+    public void GenerateChunk(GameObject segmentObject, int segmentIndexCount, int segmentVertexCount)
     {
-        GameObject segmentObject = new GameObject(segment.ToString());
-
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
@@ -40,7 +40,16 @@ public class HaloSegment
 
         // Generate Procedural Texture
         var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap, false);
-        segmentObject.AddComponent<MeshRenderer>().material = CreateMaterial(noiseMap, proceduralTexture);
+
+        // Check if a MeshRenderer already exists
+        MeshRenderer meshRenderer = segmentObject.GetComponent<MeshRenderer>();
+        if (meshRenderer == null)
+        {
+            // Add a new MeshRenderer if it doesn't exist
+            meshRenderer = segmentObject.AddComponent<MeshRenderer>();
+        }
+        // Update the material of the MeshRenderer
+        meshRenderer.material = CreateMaterial(noiseMap, proceduralTexture, segmentObject);
 
         // Generate vertices and indices for this segment
         GenerateSegmentVertices(segment, vertices, noiseMap);
@@ -51,15 +60,26 @@ public class HaloSegment
 
         // Set mesh data for this segment
         Mesh segmentMesh = GenerateMesh(vertices, uv, indices);
-        segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
+
+        // Check if a MeshFilter already exists
+        MeshFilter meshFilter = segmentObject.GetComponent<MeshFilter>();
+        if (meshFilter == null)
+        {
+            // Add a new MeshFilter if it doesn't exist
+            meshFilter = segmentObject.AddComponent<MeshFilter>();
+        }
+        meshFilter.mesh = segmentMesh;
 
         // Add a MeshCollider to the segment
-        if (meshLevelOfDetail == 2)
+        if (meshLevelOfDetail == proceduralHaloChunks.maxMeshLevelOfDetail)
         {
-            segmentObject.AddComponent<MeshCollider>().sharedMesh = segmentMesh;
+            MeshCollider meshCollider = segmentObject.GetComponent<MeshCollider>();
+            if (meshCollider == null)
+            {
+                meshCollider = segmentObject.AddComponent<MeshCollider>();
+            }
+            meshCollider.sharedMesh = segmentMesh;
         }
-        
-        return segmentObject;
     }
 
     public void GenerateSegmentVertices(int segment, List<Vector3> vertices, float[,] noiseMap)
@@ -177,13 +197,15 @@ public class HaloSegment
         return normalMap;
     }
 
-    private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture)
+    private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture, GameObject gameobject)
     {
         //Debug.Log("Updating segment material...");
 
         // Create a new material instance for this segment
-        Material newMaterial = new Material(Shader.Find("Standard"));
+        Material newMaterial = new Material(Shader.Find("Standard")); //proceduralHaloChunks.material; //new Material(Shader.Find("Standard"));
         newMaterial.mainTexture = proceduralTexture;
+
+        //UpdateMeshShader(newMaterial, gameobject);
 
         //newMaterial.SetTexture("_HeightMap", heightMap);
         //newMaterial.SetFloat("_HeightScale", 0.1f); // Adjust the height scale as needed
