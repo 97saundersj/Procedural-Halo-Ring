@@ -11,8 +11,8 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(1, 300)]
     public int widthInMeters = 300;
 
-    [Range(0.1f, 10000f)]
-    public float radiusInMeters = 10000f;
+    [Range(0.1f, 15000f)]
+    public float radiusInMeters = 15000f;
 
     // Anything higher than 5 breaks everything
     [Range(2, 255)]
@@ -55,7 +55,7 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public AnimationCurve heightCurve;
 
-    [Range(-1, 1000)]
+    [Range(-1, 10000)]
     public float meshHeightMultiplier;
 
     public AnimationCurve meshHeightCurve;

@@ -39,7 +39,7 @@ public class HaloSegment : MonoBehaviour
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
         // Generate Procedural Texture
-        var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap, false);
+        //var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap, false);
 
         // Check if a MeshRenderer already exists
         MeshRenderer meshRenderer = segmentObject.GetComponent<MeshRenderer>();
@@ -49,7 +49,7 @@ public class HaloSegment : MonoBehaviour
             meshRenderer = segmentObject.AddComponent<MeshRenderer>();
         }
         // Update the material of the MeshRenderer
-        meshRenderer.material = CreateMaterial(noiseMap, proceduralTexture, segmentObject);
+        meshRenderer.material = CreateMaterial(noiseMap, null, segmentObject);
 
         // Generate vertices and indices for this segment
         GenerateSegmentVertices(segment, vertices, noiseMap);
@@ -199,31 +199,34 @@ public class HaloSegment : MonoBehaviour
 
     private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture, GameObject gameobject)
     {
-        //Debug.Log("Updating segment material...");
+        // Create a new material instance using the custom shader
+        Material newMaterial = new Material(Shader.Find("Custom/Terrain"));
+        //Material newMaterial = new Material(Shader.Find("Standard"));
+        //newMaterial.mainTexture = proceduralTexture;
 
-        // Create a new material instance for this segment
-        Material newMaterial = new Material(Shader.Find("Standard")); //proceduralHaloChunks.material; //new Material(Shader.Find("Standard"));
-        newMaterial.mainTexture = proceduralTexture;
+        // Extract colors and height percentages from proceduralHaloChunks.regions
+        int baseColourCount = proceduralHaloChunks.regions.Length;
+        Color[] baseColours = new Color[baseColourCount];
+        float[] baseStartHeights = new float[baseColourCount];
 
-        //UpdateMeshShader(newMaterial, gameobject);
+        for (int i = 0; i < baseColourCount; i++)
+        {
+            baseColours[i] = proceduralHaloChunks.regions[i].colour;
+            baseStartHeights[i] = proceduralHaloChunks.regions[i].height; // Assuming 'heightPercentage' is defined
+        }
 
-        //newMaterial.SetTexture("_HeightMap", heightMap);
-        //newMaterial.SetFloat("_HeightScale", 0.1f); // Adjust the height scale as needed
+        // Assign shader properties
+        newMaterial.SetInt("baseColourCount", baseColourCount);
+        newMaterial.SetColorArray("baseColours", baseColours);
+        newMaterial.SetFloatArray("baseStartHeights", baseStartHeights);
 
-        // Set the height map as the parallax map
-        //newMaterial.SetTexture("_ParallaxMap", heightMap);
-        //newMaterial.SetFloat("_Parallax", 0.02f); // Adjust the parallax scale as needed
+        // Set the center point for distance calculation
+        Vector3 centerPoint = new Vector3(0,0,0); // Assuming 'centerPoint' is defined
+        newMaterial.SetVector("_Center", centerPoint);
 
-        // Convert heightMap to a normal map
-        //Texture2D normalMap = ConvertNoiseMapToNormalMap(heightMap);
-
-        // Set the bump map texture
-        //newMaterial.SetTexture("_BumpMap", normalMap);
-        //newMaterial.SetFloat("_BumpScale", 0.5f);
-        //newMaterial.EnableKeyword("_NORMALMAP");
-
-        // Set the smoothness of the material
-        newMaterial.SetFloat("_Glossiness", 0f);
+        // Set the min and max radius
+        newMaterial.SetFloat("_MinRadius", proceduralHaloChunks.radiusInMeters);
+        newMaterial.SetFloat("_MaxRadius", proceduralHaloChunks.radiusInMeters - (proceduralHaloChunks.meshHeightMultiplier/2));
 
         return newMaterial;
     }
@@ -323,20 +326,5 @@ public class HaloSegment : MonoBehaviour
         {
             return TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight);
         }
-    }
-
-    // New method to generate a noise map for vertex adjustment
-    private float[,] GenerateNoiseMap(int width, int height)
-    {
-        // Implement noise generation logic here
-        float[,] noiseMap = new float[width, height];
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                noiseMap[x, y] = Mathf.PerlinNoise(x * 0.1f, y * 0.1f); // Example noise generation
-            }
-        }
-        return noiseMap;
     }
 }
