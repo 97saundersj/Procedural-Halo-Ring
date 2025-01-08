@@ -27,11 +27,13 @@ public class ProceduralHaloChunks : MonoBehaviour
     // Anything higher than 5 breaks everything
     [Range(0.01f, 5)]
     public float textureMetersPerPixel = 5;
+    [Range(0, 6)]
+    public int levelOfDetail;
 
     public bool saveTexturesFiles;
 
     [Range(0, 6)]
-    public int levelOfDetail;
+    public int meshLevelOfDetail;
     public float noiseScale;
 
     public int octaves;
@@ -123,7 +125,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         // Create segments within the specified range
         for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(CircleSegmentCount - 1, maxSegmentIndex); i++)
         {
-            var segmentObject = CreateSegment(i, segmentIndexCount, segmentVertexCount, levelOfDetail);
+            var segmentObject = CreateSegment(i, segmentIndexCount, segmentVertexCount, levelOfDetail, meshLevelOfDetail);
             createdSegments.Add(segmentObject); // Add the created segment to the list
         }
     }
@@ -148,7 +150,7 @@ public class ProceduralHaloChunks : MonoBehaviour
                 break;
             }
 #endif
-            CreateSegment(segment, segmentIndexCount, segmentVertexCount, levelOfDetail);
+            CreateSegment(segment, segmentIndexCount, segmentVertexCount, levelOfDetail, meshLevelOfDetail);
         }
 
         // Clear the progress bar after completion or cancellation
@@ -157,10 +159,10 @@ public class ProceduralHaloChunks : MonoBehaviour
 #endif
     }
 
-    private GameObject CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount, int lod)
+    private GameObject CreateSegment(int segment, int segmentIndexCount, int segmentVertexCount, int lod, int meshLod)
     {
         // Create a new HaloSegment instance
-        var haloSegment = new HaloSegment(this, segment, lod);
+        var haloSegment = new HaloSegment(this, segment, lod, meshLod);
 
         var segmentObject = haloSegment.GenerateSegment(segmentIndexCount, segmentVertexCount);
         segmentObject.transform.SetParent(segmentsParent.transform, false);
@@ -268,7 +270,7 @@ public class ProceduralHaloChunks : MonoBehaviour
             int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
 
             // Create a new segment
-            GameObject newSegment = CreateSegment(int.Parse(closestSegment.name), segmentIndexCount, segmentVertexCount, 0);
+            GameObject newSegment = CreateSegment(int.Parse(closestSegment.name), segmentIndexCount, segmentVertexCount, 0, 2);
 
             // Replace the old segment with the new one in the list
             createdSegments[newClosestSegmentIndex] = newSegment;

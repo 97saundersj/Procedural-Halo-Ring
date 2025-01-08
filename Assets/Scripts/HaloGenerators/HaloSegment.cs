@@ -6,19 +6,21 @@ public class HaloSegment
     private ProceduralHaloChunks proceduralHaloChunks;
     private int segment;
     public int levelOfDetail;
+    public int meshLevelOfDetail;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment, int levelOfDetail)
+    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment, int levelOfDetail, int meshLevelOfDetail)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
         this.segment = segment;
         this.levelOfDetail = levelOfDetail;
+        this.meshLevelOfDetail = meshLevelOfDetail;
     }
 
     public GameObject GenerateSegment(int segmentIndexCount, int segmentVertexCount)
     {
         GameObject segmentObject = new GameObject(segment.ToString());
 
-        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
 
@@ -52,7 +54,7 @@ public class HaloSegment
         segmentObject.AddComponent<MeshFilter>().mesh = segmentMesh;
 
         // Add a MeshCollider to the segment
-        if (levelOfDetail == 0)
+        if (meshLevelOfDetail == 2)
         {
             segmentObject.AddComponent<MeshCollider>().sharedMesh = segmentMesh;
         }
@@ -64,7 +66,7 @@ public class HaloSegment
     {
         float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
 
-        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
         float widthInMeters = proceduralHaloChunks.widthInMeters;
@@ -97,7 +99,7 @@ public class HaloSegment
 
     public void GenerateSegmentIndices(int[] indices)
     {
-        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
+        int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
 

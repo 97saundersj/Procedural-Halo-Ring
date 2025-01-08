@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralHaloShell : MonoBehaviour
@@ -29,6 +32,8 @@ public class ProceduralHaloShell : MonoBehaviour
     private Mesh mesh;
 
     private MeshCollider meshCollider;
+
+    private bool needsColliderCleanup = false;
 
     private void Awake()
     {
@@ -61,13 +66,25 @@ public class ProceduralHaloShell : MonoBehaviour
         // Generate the mesh geometry
         GenerateCircleMesh();
 
-        // Collider
-        if (meshCollider == null)
+        // Remove all existing MeshColliders
+        foreach (var collider in GetComponents<MeshCollider>())
         {
-            meshCollider = gameObject.AddComponent<MeshCollider>();
+            if (!Application.isPlaying)
+            {
+                // Schedule destruction for the end of the frame
+                StartCoroutine(DestroyColliderAtEndOfFrame(collider));
+            }
         }
-        
+
+        // Add a new MeshCollider
+        meshCollider = gameObject.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh; // Update the MeshCollider with the new mesh
+    }
+
+    private IEnumerator DestroyColliderAtEndOfFrame(MeshCollider collider)
+    {
+        yield return new WaitForEndOfFrame();
+        DestroyImmediate(collider);
     }
 
     private void GenerateCircleMesh()
@@ -208,10 +225,40 @@ public class ProceduralHaloShell : MonoBehaviour
         {
             CircleSegmentCount = 3;
         }
-
+#if UNITY_EDITOR
         if (!Application.isPlaying)
         {
-        Generate();
+            needsColliderCleanup = true;
+            EditorApplication.update += CleanupColliders;
         }
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void OnDestroy()
+    {
+        // Unsubscribe from the update event to prevent accessing a destroyed object
+        EditorApplication.update -= CleanupColliders;
+    }
+#endif
+
+    private void CleanupColliders()
+    {
+#if UNITY_EDITOR
+        if (needsColliderCleanup)
+        {
+            if (this == null) return; // Check if the object is still valid
+
+            foreach (var collider in GetComponents<MeshCollider>())
+            {
+                DestroyImmediate(collider);
+            }
+
+            needsColliderCleanup = false;
+            EditorApplication.update -= CleanupColliders;
+
+            Generate();
+        }
+#endif
     }
 }
