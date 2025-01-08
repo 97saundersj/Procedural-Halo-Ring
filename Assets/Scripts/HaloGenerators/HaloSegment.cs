@@ -228,6 +228,17 @@ public class HaloSegment : MonoBehaviour
         newMaterial.SetFloat("_MinRadius", proceduralHaloChunks.radiusInMeters);
         newMaterial.SetFloat("_MaxRadius", proceduralHaloChunks.radiusInMeters - (proceduralHaloChunks.meshHeightMultiplier/2));
 
+        // Set the blend strength
+        newMaterial.SetFloat("_BlendStrength", proceduralHaloChunks.regionBlendStrength); // Assuming 'blendStrength' is defined in proceduralHaloChunks
+
+        // Set the main texture for triplanar mapping
+        newMaterial.SetTexture("_MainTex", proceduralHaloChunks.testTexture);
+
+        for (int i = 0; i < baseColourCount; i++)
+        {
+            newMaterial.SetTexture($"_Texture{i}", proceduralHaloChunks.regions[i].texture);
+        }
+
         return newMaterial;
     }
 

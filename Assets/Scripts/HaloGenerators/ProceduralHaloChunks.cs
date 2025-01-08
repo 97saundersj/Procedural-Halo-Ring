@@ -62,6 +62,11 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public TerrainType[] regions;
 
+    [Range(0, 1)]
+    public float regionBlendStrength;
+
+    public Texture2D testTexture;
+
     public bool autoUpdate;
 
     [HideInInspector]
