@@ -13,6 +13,9 @@ public class FlyCamera : MonoBehaviour
 
     public float mouseMovementThreshold = 20f; // Define a threshold for mouse movement
 
+    public float boostTimeToMax = 3f; // Time in seconds to reach max speed when boosting
+    private float currentBoostMultiplier = 1f; // Current boost multiplier
+
     Vector3 velocity; // current velocity
 
     Rigidbody rb; // Reference to the Rigidbody
@@ -55,6 +58,9 @@ public class FlyCamera : MonoBehaviour
             UpdateInput();
         else if (Input.GetMouseButtonDown(0))
             Focused = true;
+
+        // Update the boost multiplier
+        UpdateBoostMultiplier();
 
         // Physics
         velocity = Vector3.Lerp(velocity, Vector3.zero, dampingCoefficient * Time.deltaTime);
@@ -103,6 +109,20 @@ public class FlyCamera : MonoBehaviour
             Focused = false;
     }
 
+    void UpdateBoostMultiplier()
+    {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            // Gradually increase the boost multiplier
+            currentBoostMultiplier = Mathf.MoveTowards(currentBoostMultiplier, accSprintMultiplier, Time.deltaTime * (accSprintMultiplier - 1) / boostTimeToMax);
+        }
+        else
+        {
+            // Reset the boost multiplier when not boosting
+            currentBoostMultiplier = 1f;
+        }
+    }
+
     Vector3 GetAccelerationVector()
     {
         Vector3 moveInput = default;
@@ -121,8 +141,7 @@ public class FlyCamera : MonoBehaviour
         AddMovement(KeyCode.LeftControl, Vector3.down);
         Vector3 direction = transform.TransformVector(moveInput.normalized);
 
-        if (Input.GetKey(KeyCode.LeftShift))
-            return direction * (acceleration * accSprintMultiplier); // "sprinting"
-        return direction * acceleration; // "walking"
+        // Use the current boost multiplier
+        return direction * acceleration * currentBoostMultiplier;
     }
 }
