@@ -13,6 +13,7 @@
 		_Texture5("Texture 5", 2D) = "white" {}
 		_Texture6("Texture 6", 2D) = "white" {}
 		_Texture7("Texture 7", 2D) = "white" {}
+		_TextureScale("Texture Scale", Float) = 0.1
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
@@ -45,6 +46,7 @@
 		sampler2D _Texture5;
 		sampler2D _Texture6;
 		sampler2D _Texture7;
+		uniform float _TextureScale;
 
 		float3 TriplanarMapping(float3 worldPos, sampler2D tex) {
 			float3 blending = abs(normalize(worldPos));
@@ -52,9 +54,9 @@
 			blending = max(blending, 0.0);
 			blending /= (blending.x + blending.y + blending.z);
 
-			float3 xaxis = tex2D(tex, worldPos.yz * 0.1).rgb;
-			float3 yaxis = tex2D(tex, worldPos.zx * 0.1).rgb;
-			float3 zaxis = tex2D(tex, worldPos.xy * 0.1).rgb;
+			float3 xaxis = tex2D(tex, worldPos.yz * _TextureScale).rgb;
+			float3 yaxis = tex2D(tex, worldPos.zx * _TextureScale).rgb;
+			float3 zaxis = tex2D(tex, worldPos.xy * _TextureScale).rgb;
 
 			return xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
 		}

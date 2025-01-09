@@ -65,6 +65,9 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(0, 1)]
     public float regionBlendStrength;
 
+    [Range(0, 100)]
+    public float regionTextureScale;
+
     public Texture2D testTexture;
 
     public bool autoUpdate;

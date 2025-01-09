@@ -231,8 +231,7 @@ public class HaloSegment : MonoBehaviour
         // Set the blend strength
         newMaterial.SetFloat("_BlendStrength", proceduralHaloChunks.regionBlendStrength); // Assuming 'blendStrength' is defined in proceduralHaloChunks
 
-        // Set the main texture for triplanar mapping
-        newMaterial.SetTexture("_MainTex", proceduralHaloChunks.testTexture);
+        newMaterial.SetFloat("_TextureScale", proceduralHaloChunks.regionTextureScale);
 
         for (int i = 0; i < baseColourCount; i++)
         {
