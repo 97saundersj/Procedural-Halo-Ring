@@ -8,11 +8,11 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(1, 360)]
     public int CircleSegmentCount = 4;
 
-    [Range(1, 300)]
-    public int widthInMeters = 300;
+    [Range(1, 3000)]
+    public int widthInMeters = 3000;
 
-    [Range(0.1f, 15000f)]
-    public float radiusInMeters = 15000f;
+    [Range(0.1f, 50000f)]
+    public float radiusInMeters = 50000f;
 
     // Anything higher than 5 breaks everything
     [Range(2, 255)]
