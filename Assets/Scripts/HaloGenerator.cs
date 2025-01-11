@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class HaloGenerator : MonoBehaviour
 {
@@ -115,4 +116,14 @@ public struct TerrainType
     public float height;
     public Color colour;
     public Texture2D texture;
+    public List<SpawnableObject> objectsToSpawn;
+}
+
+[System.Serializable]
+public class SpawnableObject
+{
+    public GameObject prefab;
+    public float minSize;
+    public float maxSize;
+    public int amountToSpawn;
 }

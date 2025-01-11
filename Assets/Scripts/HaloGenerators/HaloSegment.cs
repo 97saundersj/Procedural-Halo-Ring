@@ -38,9 +38,6 @@ public class HaloSegment : MonoBehaviour
 
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
-        // Generate Procedural Texture
-        //var proceduralTexture = CreateTexture(widthScale, heightScale, noiseMap, false);
-
         // Check if a MeshRenderer already exists
         MeshRenderer meshRenderer = segmentObject.GetComponent<MeshRenderer>();
         if (meshRenderer == null)
@@ -70,6 +67,9 @@ public class HaloSegment : MonoBehaviour
         }
         meshFilter.mesh = segmentMesh;
 
+        // Rotate the segment object
+        segmentObject.transform.rotation = Quaternion.Euler(0, 0, 90);
+
         // Add a MeshCollider to the segment
         if (meshLevelOfDetail == proceduralHaloChunks.maxMeshLevelOfDetail)
         {
@@ -80,6 +80,8 @@ public class HaloSegment : MonoBehaviour
             }
             meshCollider.sharedMesh = segmentMesh;
         }
+
+        SpawnObjectsOnSurface(segmentObject, vertices, proceduralHaloChunks.regions);
     }
 
     public void GenerateSegmentVertices(int segment, List<Vector3> vertices, float[,] noiseMap)
@@ -335,6 +337,59 @@ public class HaloSegment : MonoBehaviour
         else
         {
             return TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight);
+        }
+    }
+
+    public void SpawnObjectsOnSurface(GameObject parentObject, List<Vector3> vertices, TerrainType[] terrainTypes)
+    {
+
+        if (meshLevelOfDetail != proceduralHaloChunks.maxMeshLevelOfDetail)
+        {
+            return; // Only spawn objects at the highest mesh level of detail
+        }
+
+        Quaternion rotation = Quaternion.Euler(0, 0, 90); // Rotation applied to the chunk
+
+        foreach (var terrainType in terrainTypes)
+        {
+            foreach (var spawnableObject in terrainType.objectsToSpawn)
+            {
+                int objectsSpawned = 0;
+                int attempts = 0;
+                int maxAttempts = vertices.Count * 2; // Limit attempts to avoid infinite loops
+
+                while (objectsSpawned < spawnableObject.amountToSpawn && attempts < maxAttempts)
+                {
+                    // Randomly select a vertex
+                    int randomVertexIndex = Random.Range(0, vertices.Count);
+                    Vector3 spawnPosition = vertices[randomVertexIndex];
+                    spawnPosition = rotation * spawnPosition;
+
+                    // Calculate the radius of the current vertex
+                    float currentRadius = spawnPosition.magnitude;
+
+                    // Check if the current radius is within the specified range
+                    if (currentRadius >= proceduralHaloChunks.radiusInMeters - 21f && currentRadius <= proceduralHaloChunks.radiusInMeters - 20.5f)
+                    {
+                        // Instantiate the prefab at the vertex position
+                        GameObject spawnedObject = Instantiate(spawnableObject.prefab, spawnPosition, Quaternion.identity);
+                        spawnedObject.transform.SetParent(parentObject.transform); // Set the object as a child of the parent object
+
+                        // Randomly scale the object between minSize and maxSize
+                        float randomScale = Random.Range(spawnableObject.minSize, spawnableObject.maxSize);
+                        spawnedObject.transform.localScale = new Vector3(randomScale, randomScale, randomScale);
+
+                        objectsSpawned++;
+                    }
+
+                    attempts++;
+                }
+
+                if (objectsSpawned < spawnableObject.amountToSpawn)
+                {
+                    Debug.LogWarning($"Could not spawn all objects for {spawnableObject.prefab.name}. Spawned {objectsSpawned} out of {spawnableObject.amountToSpawn}.");
+                }
+            }
         }
     }
 }
