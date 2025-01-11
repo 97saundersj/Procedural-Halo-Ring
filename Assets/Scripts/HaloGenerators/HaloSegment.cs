@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class HaloSegment : MonoBehaviour
@@ -9,6 +7,8 @@ public class HaloSegment : MonoBehaviour
     private int segment;
     public int levelOfDetail;
     public int meshLevelOfDetail;
+
+    public Dictionary<Vector3, float> vertexNoiseMap;
 
     public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment, int levelOfDetail, int meshLevelOfDetail)
     {
@@ -86,8 +86,9 @@ public class HaloSegment : MonoBehaviour
 
     public void GenerateSegmentVertices(int segment, List<Vector3> vertices, float[,] noiseMap)
     {
-        float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
+        vertexNoiseMap = new Dictionary<Vector3, float>();
 
+        float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
@@ -114,7 +115,11 @@ public class HaloSegment : MonoBehaviour
                 float noiseValue = noiseMap[noiseY, noiseX];
                 float adjustedRadius = radiusInMeters - heightMultiplier * noiseValue;
 
-                vertices.Add(new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius));
+                Vector3 vertex = new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius);
+                vertices.Add(vertex);
+
+                // Store the vertex and its noise value in the dictionary
+                vertexNoiseMap[vertex] = noiseValue;
             }
         }
     }
@@ -223,12 +228,12 @@ public class HaloSegment : MonoBehaviour
         newMaterial.SetFloatArray("baseStartHeights", baseStartHeights);
 
         // Set the center point for distance calculation
-        Vector3 centerPoint = new Vector3(0,0,0); // Assuming 'centerPoint' is defined
+        Vector3 centerPoint = new Vector3(0, 0, 0); // Assuming 'centerPoint' is defined
         newMaterial.SetVector("_Center", centerPoint);
 
         // Set the min and max radius
         newMaterial.SetFloat("_MinRadius", proceduralHaloChunks.radiusInMeters);
-        newMaterial.SetFloat("_MaxRadius", proceduralHaloChunks.radiusInMeters - (proceduralHaloChunks.meshHeightMultiplier/2));
+        newMaterial.SetFloat("_MaxRadius", proceduralHaloChunks.radiusInMeters - (proceduralHaloChunks.meshHeightMultiplier / 2));
 
         // Set the blend strength
         newMaterial.SetFloat("_BlendStrength", proceduralHaloChunks.regionBlendStrength); // Assuming 'blendStrength' is defined in proceduralHaloChunks
@@ -342,7 +347,6 @@ public class HaloSegment : MonoBehaviour
 
     public void SpawnObjectsOnSurface(GameObject parentObject, List<Vector3> vertices, TerrainType[] terrainTypes)
     {
-
         if (meshLevelOfDetail != proceduralHaloChunks.maxMeshLevelOfDetail)
         {
             return; // Only spawn objects at the highest mesh level of detail
@@ -350,44 +354,41 @@ public class HaloSegment : MonoBehaviour
 
         Quaternion rotation = Quaternion.Euler(0, 0, 90); // Rotation applied to the chunk
 
-        foreach (var terrainType in terrainTypes)
+        foreach (var vertexNoise in vertexNoiseMap)
         {
-            foreach (var spawnableObject in terrainType.objectsToSpawn)
+            TerrainType? selectedTerrainType = null;
+            float noiseValue = vertexNoise.Value;
+
+            foreach (var terrainType in terrainTypes)
             {
-                int objectsSpawned = 0;
-                int attempts = 0;
-                int maxAttempts = vertices.Count * 2; // Limit attempts to avoid infinite loops
-
-                while (objectsSpawned < spawnableObject.amountToSpawn && attempts < maxAttempts)
+                if (noiseValue <= terrainType.height)
                 {
-                    // Randomly select a vertex
-                    int randomVertexIndex = Random.Range(0, vertices.Count);
-                    Vector3 spawnPosition = vertices[randomVertexIndex];
-                    spawnPosition = rotation * spawnPosition;
-
-                    // Calculate the radius of the current vertex
-                    float currentRadius = spawnPosition.magnitude;
-
-                    // Check if the current radius is within the specified range
-                    if (currentRadius >= proceduralHaloChunks.radiusInMeters - 21f && currentRadius <= proceduralHaloChunks.radiusInMeters - 20.5f)
-                    {
-                        // Instantiate the prefab at the vertex position
-                        GameObject spawnedObject = Instantiate(spawnableObject.prefab, spawnPosition, Quaternion.identity);
-                        spawnedObject.transform.SetParent(parentObject.transform); // Set the object as a child of the parent object
-
-                        // Randomly scale the object between minSize and maxSize
-                        float randomScale = Random.Range(spawnableObject.minSize, spawnableObject.maxSize);
-                        spawnedObject.transform.localScale = new Vector3(randomScale, randomScale, randomScale);
-
-                        objectsSpawned++;
-                    }
-
-                    attempts++;
+                    selectedTerrainType = terrainType;
+                    break;
                 }
+            }
 
-                if (objectsSpawned < spawnableObject.amountToSpawn)
+            if (!selectedTerrainType.HasValue)
+            {
+                continue; // No suitable terrain type found
+            }
+
+            Vector3 spawnPosition = rotation * vertexNoise.Key;
+
+            foreach (var spawnableObject in selectedTerrainType.Value.objectsToSpawn)
+            {
+                // Determine if an object should be spawned based on density
+                if (Random.value < spawnableObject.density)
                 {
-                    Debug.LogWarning($"Could not spawn all objects for {spawnableObject.prefab.name}. Spawned {objectsSpawned} out of {spawnableObject.amountToSpawn}.");
+                    // Instantiate the prefab at the vertex position
+                    GameObject spawnedObject = Instantiate(spawnableObject.prefab, spawnPosition, Quaternion.identity);
+                    spawnedObject.transform.SetParent(parentObject.transform);
+
+                    // Randomly scale the object between minSize and maxSize
+                    float randomScale = Random.Range(spawnableObject.minSize, spawnableObject.maxSize);
+                    spawnedObject.transform.localScale = new Vector3(randomScale, randomScale, randomScale);
+
+                    break; // Exit the loop after spawning one object
                 }
             }
         }
