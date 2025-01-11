@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4936930815703755575}
   - component: {fileID: 3947768515480566352}
+  - component: {fileID: 138180453412797503}
   m_Layer: 0
   m_Name: Tree1
   m_TagString: Untagged
@@ -58,6 +59,29 @@ LODGroup:
     renderers:
     - renderer: {fileID: 6421255445741443092}
   m_Enabled: 1
+--- !u!136 &138180453412797503
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7524450681808243266}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.37188333
+  m_Height: 10.86076
+  m_Direction: 1
+  m_Center: {x: 0.01, y: 5.38, z: 0.04}
 --- !u!1001 &5682826327818011792
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -193,7 +217,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 9500000, guid: d14ac8ebf2fabb944bc910d23bd33f8e, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 6400002, guid: d14ac8ebf2fabb944bc910d23bd33f8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

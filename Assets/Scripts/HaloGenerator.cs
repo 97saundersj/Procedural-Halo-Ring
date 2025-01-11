@@ -125,5 +125,5 @@ public class SpawnableObject
     public GameObject prefab;
     public float minSize;
     public float maxSize;
-    public int amountToSpawn;
+    public float density;
 }
