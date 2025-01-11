@@ -68,7 +68,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(0, 100)]
     public float regionTextureScale;
 
-    public Texture2D testTexture;
+    public List<GameObject> objectsToSpawn;
 
     public bool autoUpdate;
 
