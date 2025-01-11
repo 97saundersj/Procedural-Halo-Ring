@@ -378,7 +378,7 @@ public class HaloSegment : MonoBehaviour
             foreach (var spawnableObject in selectedTerrainType.Value.objectsToSpawn)
             {
                 // Determine if an object should be spawned based on density
-                if (Random.value < spawnableObject.density)
+                if (Random.value <= spawnableObject.density)
                 {
                     // Instantiate the prefab at the vertex position
                     GameObject spawnedObject = Instantiate(spawnableObject.prefab, spawnPosition, Quaternion.identity);
@@ -388,7 +388,21 @@ public class HaloSegment : MonoBehaviour
                     float randomScale = Random.Range(spawnableObject.minSize, spawnableObject.maxSize);
                     spawnedObject.transform.localScale = new Vector3(randomScale, randomScale, randomScale);
 
-                    break; // Exit the loop after spawning one object
+                    if (spawnableObject.randomRotation)
+                    {
+                        float randomRotationX = Random.Range(0f, 360f);
+                        float randomRotationY = Random.Range(0f, 360f);
+                        float randomRotationZ = Random.Range(0f, 360f);
+                        spawnedObject.transform.rotation = Quaternion.Euler(randomRotationX, randomRotationY, randomRotationZ);
+                    }
+                    else
+                    {
+                        // Randomly rotate the object on y
+                        float randomRotation = Random.Range(0f, 360f);
+                        spawnedObject.transform.rotation = Quaternion.Euler(0, randomRotation, 0);
+                    }
+
+                    break; // One object per vertex
                 }
             }
         }

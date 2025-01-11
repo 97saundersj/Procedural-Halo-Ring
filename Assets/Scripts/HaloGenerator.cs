@@ -126,4 +126,5 @@ public class SpawnableObject
     public float minSize;
     public float maxSize;
     public float density;
+    public bool randomRotation;
 }
