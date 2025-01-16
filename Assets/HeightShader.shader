@@ -49,17 +49,20 @@
 		uniform float _TextureScale;
 
 		float3 TriplanarMapping(float3 worldPos, sampler2D tex) {
-			float3 blending = abs(normalize(worldPos));
-			blending = (blending - 0.2) * 1.25;
-			blending = max(blending, 0.0);
-			blending /= (blending.x + blending.y + blending.z);
-
-			float3 xaxis = tex2D(tex, worldPos.yz * _TextureScale).rgb;
-			float3 yaxis = tex2D(tex, worldPos.zx * _TextureScale).rgb;
-			float3 zaxis = tex2D(tex, worldPos.xy * _TextureScale).rgb;
-
-			return xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
-		}
+	    // Adjust world position relative to the center
+	    float3 localPos = worldPos - _Center;
+	
+	    float3 blending = abs(normalize(localPos));
+	    blending = (blending - 0.2) * 1.25;
+	    blending = max(blending, 0.0);
+	    blending /= (blending.x + blending.y + blending.z);
+	
+	    float3 xaxis = tex2D(tex, localPos.yz * _TextureScale).rgb;
+	    float3 yaxis = tex2D(tex, localPos.zx * _TextureScale).rgb;
+	    float3 zaxis = tex2D(tex, localPos.xy * _TextureScale).rgb;
+	
+	    return xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
+	}
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 			float distanceFromAxis = length(float2(IN.worldPos.z - _Center.z, IN.worldPos.y - _Center.y));

@@ -4,15 +4,17 @@ using UnityEngine;
 public class HaloSegment : MonoBehaviour
 {
     private ProceduralHaloChunks proceduralHaloChunks;
+    public GameObject parentObject;
     private int segment;
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
     public Dictionary<Vector3, float> vertexNoiseMap;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, int segment, int levelOfDetail, int meshLevelOfDetail)
+    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, GameObject parentObject, int segment, int levelOfDetail, int meshLevelOfDetail)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
+        this.parentObject = parentObject;
         this.segment = segment;
         this.levelOfDetail = levelOfDetail;
         this.meshLevelOfDetail = meshLevelOfDetail;
@@ -20,6 +22,8 @@ public class HaloSegment : MonoBehaviour
 
     public void GenerateChunk(GameObject segmentObject, int segmentIndexCount, int segmentVertexCount)
     {
+        segmentObject.transform.SetParent(parentObject.transform, false);
+
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
         int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
@@ -208,8 +212,6 @@ public class HaloSegment : MonoBehaviour
     {
         // Create a new material instance using the custom shader
         Material newMaterial = new Material(Shader.Find("Custom/Terrain"));
-        //Material newMaterial = new Material(Shader.Find("Standard"));
-        //newMaterial.mainTexture = proceduralTexture;
 
         // Extract colors and height percentages from proceduralHaloChunks.regions
         int baseColourCount = proceduralHaloChunks.regions.Length;
@@ -228,8 +230,7 @@ public class HaloSegment : MonoBehaviour
         newMaterial.SetFloatArray("baseStartHeights", baseStartHeights);
 
         // Set the center point for distance calculation
-        Vector3 centerPoint = new Vector3(0, 0, 0); // Assuming 'centerPoint' is defined
-        newMaterial.SetVector("_Center", centerPoint);
+        newMaterial.SetVector("_Center", gameobject.transform.position);
 
         // Set the min and max radius
         newMaterial.SetFloat("_MinRadius", proceduralHaloChunks.radiusInMeters);
@@ -352,8 +353,6 @@ public class HaloSegment : MonoBehaviour
             return; // Only spawn objects at the highest mesh level of detail
         }
 
-        Quaternion rotation = Quaternion.Euler(0, 0, 90); // Rotation applied to the chunk
-
         foreach (var vertexNoise in vertexNoiseMap)
         {
             TerrainType? selectedTerrainType = null;
@@ -373,7 +372,8 @@ public class HaloSegment : MonoBehaviour
                 continue; // No suitable terrain type found
             }
 
-            Vector3 spawnPosition = rotation * vertexNoise.Key;
+            Vector3 localVertexPosition = vertexNoise.Key;
+            Vector3 worldVertexPosition = parentObject.transform.TransformPoint(localVertexPosition);
 
             foreach (var spawnableObject in selectedTerrainType.Value.objectsToSpawn)
             {
@@ -381,8 +381,12 @@ public class HaloSegment : MonoBehaviour
                 if (Random.value <= spawnableObject.density)
                 {
                     // Instantiate the prefab at the vertex position
-                    GameObject spawnedObject = Instantiate(spawnableObject.prefab, spawnPosition, Quaternion.identity);
+                    GameObject spawnedObject = Instantiate(spawnableObject.prefab, worldVertexPosition, Quaternion.identity);
                     spawnedObject.transform.SetParent(parentObject.transform);
+
+                    // Calculate the normal at the vertex position
+                    Vector3 normal = (worldVertexPosition - parentObject.transform.position).normalized;
+                    spawnedObject.transform.up = normal;
 
                     // Randomly scale the object between minSize and maxSize
                     float randomScale = Random.Range(spawnableObject.minSize, spawnableObject.maxSize);

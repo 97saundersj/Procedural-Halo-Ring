@@ -2,11 +2,15 @@ using UnityEngine;
 
 public class Rotate : MonoBehaviour
 {
-    public float rotationsPerMinute = 10.0f;
+    public float xRotationsPerMinute = 0f;
+    public float yRotationsPerMinute = 0f;
+    public float zRotationsPerMinute = 0f;
 
     void Update()
     {
-        // Rotate around the local Y-axis
-        transform.Rotate(0, 6.0f * rotationsPerMinute * Time.deltaTime, 0, Space.Self);
+        var xRotations = 6.0f * xRotationsPerMinute * Time.deltaTime;
+        var yRotations = 6.0f * yRotationsPerMinute * Time.deltaTime;
+        var zRotations = 6.0f * zRotationsPerMinute * Time.deltaTime;
+        transform.Rotate(xRotationsPerMinute, yRotationsPerMinute, zRotationsPerMinute, Space.Self);
     }
 }

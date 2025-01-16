@@ -176,17 +176,14 @@ public class ProceduralHaloChunks : MonoBehaviour
     private GameObject CreateSegment(GameObject segmentObject, int segment, int segmentIndexCount, int segmentVertexCount, int lod, int meshLod)
     {
         // Create a new HaloSegment instance
-        var haloSegment = new HaloSegment(this, segment, lod, meshLod);
+        var haloSegment = new HaloSegment(this, segmentsParent, segment, lod, meshLod);
 
         if (segmentObject == null)
         {
             segmentObject = new GameObject(segment.ToString());
         }
         
-
-        haloSegment.GenerateChunk(segmentObject,segmentIndexCount, segmentVertexCount);
-
-        segmentObject.transform.SetParent(segmentsParent.transform, false);
+        haloSegment.GenerateChunk(segmentObject, segmentIndexCount, segmentVertexCount);
 
         return segmentObject; // Return the created segment
     }
