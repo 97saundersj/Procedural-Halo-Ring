@@ -112,8 +112,8 @@ public class HaloSegment : MonoBehaviour
         int newChunkIndex2 = (chunkIndex*2)+1;//chunkIndex * 2 + 1;
 
         // Create two new GameObjects for the new chunks
-        GameObject newChunk1 = new GameObject("HaloSegment_" + newChunkIndex1);
-        GameObject newChunk2 = new GameObject("HaloSegment_" + newChunkIndex2);
+        GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
+        GameObject newChunk2 = new GameObject(newChunkIndex2.ToString());
 
         // Set the parent of the new chunks
         newChunk1.transform.SetParent(parentObject.transform, false);
@@ -129,14 +129,14 @@ public class HaloSegment : MonoBehaviour
         haloSegment1.circleSegmentCount = this.circleSegmentCount * 2;
         haloSegment1.chunkIndex = newChunkIndex1;
         haloSegment1.levelOfDetail = this.levelOfDetail;
-        haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail;
+        haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
         haloSegment2.proceduralHaloChunks = this.proceduralHaloChunks;
         haloSegment2.parentObject = this.parentObject;
         haloSegment2.circleSegmentCount = this.circleSegmentCount * 2;
         haloSegment2.chunkIndex = newChunkIndex2;
         haloSegment2.levelOfDetail = this.levelOfDetail;
-        haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail;
+        haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
         int segmentVertexCount = (proceduralHaloChunks.segmentXVertices + 1) * proceduralHaloChunks.segmentYVertices;
         int segmentIndexCount = proceduralHaloChunks.segmentXVertices * (proceduralHaloChunks.segmentYVertices - 1) * 6;
@@ -145,8 +145,18 @@ public class HaloSegment : MonoBehaviour
         haloSegment1.GenerateChunk(newChunk1, segmentIndexCount, segmentVertexCount);
         haloSegment2.GenerateChunk(newChunk2, segmentIndexCount, segmentVertexCount);
 
-        // Remove the current chunk (this GameObject)
-        Destroy(gameObject);
+        proceduralHaloChunks.createdSegments.Add(newChunk1);
+        proceduralHaloChunks.createdSegments.Add(newChunk2);
+        // Check if in edit mode and use DestroyImmediate if true
+        if (Application.isEditor && !Application.isPlaying)
+        {
+            DestroyImmediate(gameObject); // Use DestroyImmediate for edit mode
+        }
+        else
+        {
+            Destroy(gameObject); // Use Destroy during runtime
+        }
+        proceduralHaloChunks.createdSegments.Remove(gameObject);
     }
 
     public void GenerateSegmentVertices(int chunkIndex, List<Vector3> vertices, float[,] noiseMap)

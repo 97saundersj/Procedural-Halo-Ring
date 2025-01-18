@@ -90,7 +90,8 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     public bool generateOnPlay;
 
-    private List<GameObject> createdSegments = new List<GameObject>(); // List to store created segments
+    [HideInInspector]
+    public List<GameObject> createdSegments = new List<GameObject>(); // List to store created segments
     private List<int> closestSegmentIndices = new List<int>(); // Change to a list to store multiple indices
     
     public GameObject player; // Reference to the player GameObject
@@ -246,7 +247,7 @@ public class ProceduralHaloChunks : MonoBehaviour
         while (true)
         {
             CheckPlayerProximity();
-            yield return new WaitForSeconds(1f); // Wait for 1 second before checking again
+            yield return new WaitForSeconds(0.2f); // Wait for 0.2 seconds before checking again
         }
     }
 
@@ -260,8 +261,6 @@ public class ProceduralHaloChunks : MonoBehaviour
 
         for (int i = 0; i < createdSegments.Count; i++)
         {
-            if (closestSegmentIndices.Contains(i)) continue;
-
             var segment = createdSegments[i];
             MeshRenderer meshRenderer = segment.GetComponent<MeshRenderer>();
             if (meshRenderer != null)
@@ -269,26 +268,23 @@ public class ProceduralHaloChunks : MonoBehaviour
                 Vector3 closestPoint = meshRenderer.bounds.ClosestPoint(player.transform.position);
                 float distance = Vector3.Distance(player.transform.position, closestPoint);
 
-                if (distance < minDistance && distance <= proximityThreshold)
+                //if (distance < minDistance && distance <= proximityThreshold)
+                if (distance <= proximityThreshold)
                 {
                     minDistance = distance;
                     closestSegment = segment;
                     newClosestSegmentIndex = i;
+
+                    // Split up chunk
+                    HaloSegment haloSegment = closestSegment.GetComponent<HaloSegment>();
+                    Debug.Log("checking valid");
+                    if (haloSegment != null && haloSegment.meshLevelOfDetail > 0)
+                    {
+                        Debug.Log("Splitting");
+                        haloSegment.SplitChunk();
+                    }
                 }
             }
-        }
-
-        if (closestSegment != null && newClosestSegmentIndex != -1)
-        {
-            closestSegmentIndices.Add(newClosestSegmentIndex);
-            Debug.Log($"Closest segment is {closestSegment.name} with a distance of {minDistance}");
-
-            // Calculate vertex and index counts for a single segment
-            int segmentVertexCount = (segmentXVertices + 1) * segmentYVertices;
-            int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
-
-            // Create a new segment
-            createdSegments[newClosestSegmentIndex] = CreateSegment(createdSegments[newClosestSegmentIndex], int.Parse(closestSegment.name), segmentIndexCount, segmentVertexCount, 0, maxMeshLevelOfDetail);
         }
     }
 }

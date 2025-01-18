@@ -6,12 +6,19 @@ public class ProceduralHaloChunksEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        // Draw the default inspector
-        DrawDefaultInspector();
+        
 
         // Get a reference to the target script
         ProceduralHaloChunks proceduralHaloChunks = (ProceduralHaloChunks)target;
+        // Add a button to generate the halo
+        if (GUILayout.Button("Generate"))
+        {
+            proceduralHaloChunks.Generate();
+        }
 
+        // Draw the default inspector
+        DrawDefaultInspector();
+        
         // Add a space before the slider
         GUILayout.Space(10);
 
