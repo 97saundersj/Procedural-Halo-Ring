@@ -23,5 +23,10 @@ public class HaloChunkEditor : Editor
 
             haloChunk.GenerateChunk(haloChunk.gameObject, segmentIndexCount, segmentVertexCount);
         }
+
+        if (GUILayout.Button("Split"))
+        {
+            haloChunk.SplitChunk();
+        }
     }
 } 

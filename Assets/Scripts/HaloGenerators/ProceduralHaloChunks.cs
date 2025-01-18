@@ -176,7 +176,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     private GameObject CreateSegment(GameObject segmentObject, int segment, int segmentIndexCount, int segmentVertexCount, int lod, int meshLod)
     {
         // Create a new HaloSegment instance
-        var haloSegment = new HaloSegment(this, segmentsParent, segment, lod, meshLod);
+        var haloSegment = new HaloSegment(this, segmentsParent, CircleSegmentCount, segment, lod, meshLod);
 
         if (segmentObject == null)
         {
