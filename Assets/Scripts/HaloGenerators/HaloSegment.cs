@@ -3,19 +3,21 @@ using UnityEngine;
 
 public class HaloSegment : MonoBehaviour
 {
-    private ProceduralHaloChunks proceduralHaloChunks;
+    public ProceduralHaloChunks proceduralHaloChunks;
     public GameObject parentObject;
-    private int segment;
+    public int circleSegmentCount;
+    public int chunkIndex;
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
     public Dictionary<Vector3, float> vertexNoiseMap;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, GameObject parentObject, int segment, int levelOfDetail, int meshLevelOfDetail)
+    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, GameObject parentObject, int circleSegmentCount, int chunkIndex, int levelOfDetail, int meshLevelOfDetail)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
         this.parentObject = parentObject;
-        this.segment = segment;
+        this.circleSegmentCount = circleSegmentCount;
+        this.chunkIndex = chunkIndex;
         this.levelOfDetail = levelOfDetail;
         this.meshLevelOfDetail = meshLevelOfDetail;
     }
@@ -23,6 +25,20 @@ public class HaloSegment : MonoBehaviour
     public void GenerateChunk(GameObject segmentObject, int segmentIndexCount, int segmentVertexCount)
     {
         segmentObject.transform.SetParent(parentObject.transform, false);
+
+        // Add this HaloSegment script to the segmentObject if it doesn't already exist
+        HaloSegment haloSegment = segmentObject.GetComponent<HaloSegment>();
+        if (haloSegment == null)
+        {
+            haloSegment = segmentObject.AddComponent<HaloSegment>();
+        }
+
+        haloSegment.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment.parentObject = this.parentObject;
+        haloSegment.chunkIndex = this.chunkIndex;
+        haloSegment.circleSegmentCount = this.circleSegmentCount;
+        haloSegment.levelOfDetail = this.levelOfDetail;
+        haloSegment.meshLevelOfDetail = this.meshLevelOfDetail;
 
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
@@ -35,7 +51,7 @@ public class HaloSegment : MonoBehaviour
         var uv = new Vector2[totalVertices];
         var indices = new int[segmentIndexCount];
 
-        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / proceduralHaloChunks.CircleSegmentCount;
+        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / circleSegmentCount;
 
         float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
         float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
@@ -52,14 +68,14 @@ public class HaloSegment : MonoBehaviour
         // Update the material of the MeshRenderer
         meshRenderer.material = CreateMaterial(noiseMap, null, segmentObject);
 
-        // Generate vertices and indices for this segment
-        GenerateSegmentVertices(segment, vertices, noiseMap);
+        // Generate vertices and indices for this chunkIndex
+        GenerateSegmentVertices(chunkIndex, vertices, noiseMap);
         GenerateSegmentIndices(indices);
 
-        // Calculate UVs for this segment
+        // Calculate UVs for this chunkIndex
         CalculateSegmentUVs(uv, segmentXVertices, segmentYVertices);
 
-        // Set mesh data for this segment
+        // Set mesh data for this chunkIndex
         Mesh segmentMesh = GenerateMesh(vertices, uv, indices);
 
         // Check if a MeshFilter already exists
@@ -71,10 +87,10 @@ public class HaloSegment : MonoBehaviour
         }
         meshFilter.mesh = segmentMesh;
 
-        // Rotate the segment object
+        // Rotate the chunkIndex object
         segmentObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 
-        // Add a MeshCollider to the segment
+        // Add a MeshCollider to the chunkIndex
         if (meshLevelOfDetail == proceduralHaloChunks.maxMeshLevelOfDetail)
         {
             MeshCollider meshCollider = segmentObject.GetComponent<MeshCollider>();
@@ -88,7 +104,62 @@ public class HaloSegment : MonoBehaviour
         SpawnObjectsOnSurface(segmentObject, vertices, proceduralHaloChunks.regions);
     }
 
-    public void GenerateSegmentVertices(int segment, List<Vector3> vertices, float[,] noiseMap)
+    // New method to split a chunk into two new chunks
+    public void SplitChunk()
+    {
+        // Determine new chunk positions
+        int newChunkIndex1 = chunkIndex*2;//chunkIndex * 2; // Example logic for new chunk index
+        int newChunkIndex2 = (chunkIndex*2)+1;//chunkIndex * 2 + 1;
+
+        // Create two new GameObjects for the new chunks
+        GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
+        GameObject newChunk2 = new GameObject(newChunkIndex2.ToString());
+
+        // Set the parent of the new chunks
+        newChunk1.transform.SetParent(parentObject.transform, false);
+        newChunk2.transform.SetParent(parentObject.transform, false);
+
+        // Generate and assign HaloSegment components to the new chunks
+        HaloSegment haloSegment1 = newChunk1.AddComponent<HaloSegment>();
+        HaloSegment haloSegment2 = newChunk2.AddComponent<HaloSegment>();
+
+        // Copy relevant properties from the current chunk to the new chunks
+        haloSegment1.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment1.parentObject = this.parentObject;
+        haloSegment1.circleSegmentCount = this.circleSegmentCount * 2;
+        haloSegment1.chunkIndex = newChunkIndex1;
+        haloSegment1.levelOfDetail = this.levelOfDetail;
+        haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
+
+        haloSegment2.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment2.parentObject = this.parentObject;
+        haloSegment2.circleSegmentCount = this.circleSegmentCount * 2;
+        haloSegment2.chunkIndex = newChunkIndex2;
+        haloSegment2.levelOfDetail = this.levelOfDetail;
+        haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
+
+        int segmentVertexCount = (proceduralHaloChunks.segmentXVertices + 1) * proceduralHaloChunks.segmentYVertices;
+        int segmentIndexCount = proceduralHaloChunks.segmentXVertices * (proceduralHaloChunks.segmentYVertices - 1) * 6;
+
+        // You may also need to update mesh data, noise maps, etc. for each chunk.
+        haloSegment1.GenerateChunk(newChunk1, segmentIndexCount, segmentVertexCount);
+        haloSegment2.GenerateChunk(newChunk2, segmentIndexCount, segmentVertexCount);
+
+        proceduralHaloChunks.createdSegments.Add(newChunk1);
+        proceduralHaloChunks.createdSegments.Add(newChunk2);
+        // Check if in edit mode and use DestroyImmediate if true
+        if (Application.isEditor && !Application.isPlaying)
+        {
+            DestroyImmediate(gameObject); // Use DestroyImmediate for edit mode
+        }
+        else
+        {
+            Destroy(gameObject); // Use Destroy during runtime
+        }
+        proceduralHaloChunks.createdSegments.Remove(gameObject);
+    }
+
+    public void GenerateSegmentVertices(int chunkIndex, List<Vector3> vertices, float[,] noiseMap)
     {
         vertexNoiseMap = new Dictionary<Vector3, float>();
 
@@ -99,9 +170,9 @@ public class HaloSegment : MonoBehaviour
         float widthInMeters = proceduralHaloChunks.widthInMeters;
         float radiusInMeters = proceduralHaloChunks.radiusInMeters;
 
-        float segmentWidth = Mathf.PI * 2f / proceduralHaloChunks.CircleSegmentCount;
+        float segmentWidth = Mathf.PI * 2f / circleSegmentCount;
         float angleStep = segmentWidth / segmentXVertices;
-        float startAngle = segment * segmentWidth;
+        float startAngle = chunkIndex * segmentWidth;
 
         int noiseMapWidth = noiseMap.GetLength(0);
         int noiseMapHeight = noiseMap.GetLength(1);
@@ -164,7 +235,7 @@ public class HaloSegment : MonoBehaviour
 
     private Texture2D CreateTexture(float widthScale, float heightScale, float[,] noiseMap, bool createHeightMap)
     {
-        //Debug.Log("Updating segment Texture...");
+        //Debug.Log("Updating chunkIndex Texture...");
 
         Texture2D proceduralTexture = GenerateProceduralNoiseTexture(widthScale, heightScale, noiseMap, createHeightMap);
         proceduralTexture.wrapMode = TextureWrapMode.Clamp;
@@ -173,7 +244,7 @@ public class HaloSegment : MonoBehaviour
         // Save the texture for visualization
         if (proceduralHaloChunks.saveTexturesFiles)
         {
-            SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + (createHeightMap ? "HeightMap_" : "") + segment);
+            SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + (createHeightMap ? "HeightMap_" : "") + chunkIndex);
         }
 
         return proceduralTexture;
@@ -251,7 +322,7 @@ public class HaloSegment : MonoBehaviour
 
     private Mesh GenerateMesh(List<Vector3> vertices, Vector2[] uv, int[] indices)
     {
-        Debug.Log("Updating segment mesh...");
+        Debug.Log("Updating chunkIndex mesh...");
 
         Mesh segmentMesh = new Mesh { name = "Procedural Halo Segment" };
         segmentMesh.SetVertices(vertices);
@@ -287,7 +358,7 @@ public class HaloSegment : MonoBehaviour
         int octaves = proceduralHaloChunks.octaves;
         float persistance = proceduralHaloChunks.persistance;
         float lacunarity = proceduralHaloChunks.lacunarity;
-        Vector2 offset = new(segment * widthScale, 0);
+        Vector2 offset = new(chunkIndex * widthScale, 0);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, proceduralHaloChunks.heightCurve, proceduralHaloChunks.heightMultiplier);
     }
