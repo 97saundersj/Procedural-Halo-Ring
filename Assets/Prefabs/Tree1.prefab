@@ -49,15 +49,11 @@ LODGroup:
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
   m_LODs:
-  - screenRelativeHeight: 0.005
+  - screenRelativeHeight: 0.01
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 8617084723482994286}
     - renderer: {fileID: 8617084723482994284}
-  - screenRelativeHeight: 0.001
-    fadeTransitionWidth: 0
-    renderers:
-    - renderer: {fileID: 6421255445741443092}
   m_Enabled: 1
 --- !u!136 &138180453412797503
 CapsuleCollider:
@@ -150,6 +146,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Billboard
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7007cb04ed013104aab08e2c28fe5e83, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -158,11 +158,6 @@ PrefabInstance:
 --- !u!4 &5284918168482603899 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7007cb04ed013104aab08e2c28fe5e83, type: 3}
-  m_PrefabInstance: {fileID: 5682826327818011792}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6421255445741443092 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 7007cb04ed013104aab08e2c28fe5e83, type: 3}
   m_PrefabInstance: {fileID: 5682826327818011792}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8617084723480837644
