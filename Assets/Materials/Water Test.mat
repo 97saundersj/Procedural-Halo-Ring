@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8040469015532205066
+--- !u!114 &-2429114455741196904
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20,8 +20,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: New Water
-  m_Shader: {fileID: -6465566751694194690, guid: 0f576b1961d8d28448f99050d1430be6, type: 3}
+  m_Name: Water Test
+  m_Shader: {fileID: -6465566751694194690, guid: 25a4589b5dbf5e0439a73888d281d760, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -64,10 +64,6 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _NormalFromTexture_896cf3e837274c4baa9efa77328b65da_Texture_0_Texture2D:
-        m_Texture: {fileID: 2800000, guid: f31580b6667a11e48a2d487ce13fbe4c, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -76,21 +72,24 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SampleTexture2D_34334b90fb404053a5781900b304a99c_Texture_1_Texture2D:
-        m_Texture: {fileID: 2800000, guid: f31580b6667a11e48a2d487ce13fbe4c, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _SampleTexture2D_47d3a94277014b4885e9611d8358abb3_Texture_1_Texture2D:
-        m_Texture: {fileID: 2800000, guid: f31580b6667a11e48a2d487ce13fbe4c, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _SampleTexture2D_564d939f11c048bbad23b765e9efa852_Texture_1_Texture2D:
+    - _SampleTexture2D_76c474e4fdf34a329854d758fc792d3c_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: db243d2611d444037835ecd4af49e9b9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_7d9a7c7c7b064486910e03d0efdc97d1_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: db243d2611d444037835ecd4af49e9b9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_80fb3a43b491452296c1dec95be80f84_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: f31580b6667a11e48a2d487ce13fbe4c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_be0eeb64310649a6b830ece4564f95c8_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: f31580b6667a11e48a2d487ce13fbe4c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.8
     - _BUILTIN_QueueControl: 0
     - _BUILTIN_QueueOffset: 0
     - _BumpScale: 1
@@ -102,22 +101,17 @@ Material:
     - _GlossyReflections: 1
     - _Metallic: 0
     - _Mode: 0
-    - _NormalStrength: 0.01
+    - _NormalStrength: 0.001
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _WaveBlend: 0.5
-    - _WavePower: 1
-    - _WaveScale: 500
-    - _WaveTime: 1
+    - _WaveScale: 24.69
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _WaveColour: {r: 0, g: 0.2784314, b: 0.3529412, a: 0}
-    - _WaveColour2: {r: 0, g: 0.2784314, b: 0.3529412, a: 0}
-    - _WaveMovement: {r: -0.0002, g: 0, b: 0, a: 0}
+    - _WaveMovement: {r: -0.001, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
