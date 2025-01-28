@@ -20,7 +20,8 @@ namespace StarterAssets
 		public bool cursorLocked = true;
 		public bool cursorInputForLook = true;
 
-		[Header("Flashlight")]
+		[Header("GameObjects")]
+		public PauseMenu pauseMenu;
 		public GameObject flashlight;
 
 #if ENABLE_INPUT_SYSTEM
@@ -47,9 +48,15 @@ namespace StarterAssets
 			SprintInput(value.isPressed);
 		}
 
+
 		public void OnToggleFlashlight(InputValue value)
 		{
 			flashlight.SetActive(value.isPressed ? !flashlight.activeSelf : flashlight.activeSelf);
+		}
+
+		public void OnToggleSettings(InputValue value)
+		{
+			pauseMenu.Toggle();
 		}
 #endif
 

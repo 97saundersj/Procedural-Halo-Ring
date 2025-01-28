@@ -5,7 +5,8 @@ public class CameraLightingControl : MonoBehaviour
     public Light mainLight;
     public bool enableCheck = true; // Set this to true for the camera that should have the light enabled
 
-public float disableRotationThreshold = 10f; // Disable light if rotation is less than this value
+    public float disableRotationStart = 10f; // Start angle for disabling light
+    public float disableRotationEnd = 350f; // End angle for disabling light
 
     void OnPreRender()
     {
@@ -18,10 +19,14 @@ public float disableRotationThreshold = 10f; // Disable light if rotation is les
             }
             float lightRotationX = mainLight.transform.eulerAngles.x;
             Debug.Log("lightxrotation" + lightRotationX);
-            bool isBelowThreshold = lightRotationX < disableRotationThreshold;
+            bool isBelowStartThreshold = lightRotationX < disableRotationStart;
+            bool isBelowEndThreshold = lightRotationX > disableRotationEnd;
 
-            mainLight.enabled = !isBelowThreshold;
-            //Debug.Log(mainLight.enabled ? "Enabling light for this camera" : "Disabling light for this camera");
+            mainLight.enabled = !isBelowStartThreshold && !isBelowEndThreshold;
+            if (!mainLight.enabled)
+            {
+                Debug.Log("Disabling light for this camera");
+            }
         }
     }
 

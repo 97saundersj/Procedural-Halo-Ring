@@ -26,25 +26,21 @@ public class PauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(false);
     }
 
-    void Update()
-    {
-        // Toggle pause menu on pressing the Escape key
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (isPaused)
-            {
-                Resume();
-            }
-            else
-            {
-                Pause();
-            }
-        }
-    }
-
     public void ChangeQualityLevel(int index)
     {
         QualitySettings.SetQualityLevel(index, true);
+    }
+
+    public void Toggle()
+    {
+        if (isPaused)
+        {
+            Resume();
+        }
+        else
+        {
+            Pause();
+        }
     }
 
     public void Resume()
