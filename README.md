@@ -1,4 +1,4 @@
-# Procedual-Halo-Ring
+# Procedural-Halo-Ring
 This project procedurally generates a 1/100x scale Halo ring using Perlin Noise and Fractional Brownian Motion to simulate realistic terrain features.
 
 **[Check out the demo here!](https://97saundersj.github.io/Procedural-Halo-Ring/)**
