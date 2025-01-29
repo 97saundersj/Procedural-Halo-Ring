@@ -92,13 +92,13 @@ public class RingWorldGenerator : MonoBehaviour
 
     [HideInInspector]
     public List<GameObject> createdSegments = new List<GameObject>(); // List to store created segments
-    
+
     public GameObject player; // Reference to the player GameObject
 
     public float proximityThreshold = 300f;
 
     private void Awake()
-    { 
+    {
         if (generateOnPlay)
         {
             Generate();
@@ -138,8 +138,11 @@ public class RingWorldGenerator : MonoBehaviour
         // Create segments within the specified range
         for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(NumberOfCircumferenceChunks - 1, maxSegmentIndex); i++)
         {
-            var segmentObject = CreateSegment(null, i, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
-            createdSegments.Add(segmentObject); // Add the created segment to the list
+            for (int j = Mathf.Max(0, minSegmentIndex); j <= Mathf.Min(NumberOfWidthChunks - 1, maxSegmentIndex); j++)
+            {
+                var segmentObject = CreateChunk(null, i, j, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
+                createdSegments.Add(segmentObject); // Add the created segment to the list
+            }
         }
     }
 
@@ -163,7 +166,8 @@ public class RingWorldGenerator : MonoBehaviour
                 break;
             }
 #endif
-            CreateSegment(null, segment, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
+            CreateChunk(null, segment, segmentIndexCount, 1, levelOfDetail, meshLevelOfDetail);
+
         }
 
         // Clear the progress bar after completion or cancellation
@@ -172,16 +176,17 @@ public class RingWorldGenerator : MonoBehaviour
 #endif
     }
 
-    private GameObject CreateSegment(GameObject segmentObject, int segment, int segmentIndexCount, int lod, int meshLod)
+    private GameObject CreateChunk(GameObject segmentObject, int circumferenceChunkIndex, int widthChunkIndex, int segmentIndexCount, int lod,
+        int meshLod)
     {
         // Create a new RingWorldChunk instance
-        var haloSegment = new RingWorldChunk(this, segmentsParent, NumberOfCircumferenceChunks, segment, lod, meshLod);
+        var haloSegment = new RingWorldChunk(this, segmentsParent, NumberOfCircumferenceChunks, circumferenceChunkIndex, NumberOfWidthChunks, widthChunkIndex, lod, meshLod);
 
         if (segmentObject == null)
         {
-            segmentObject = new GameObject(segment.ToString());
+            segmentObject = new GameObject(circumferenceChunkIndex.ToString());
         }
-        
+
         haloSegment.GenerateChunk(segmentObject, segmentIndexCount);
 
         return segmentObject; // Return the created segment
