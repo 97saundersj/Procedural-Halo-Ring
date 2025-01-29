@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HaloSegment : MonoBehaviour
+public class RingWorldChunk : MonoBehaviour
 {
-    public ProceduralHaloChunks proceduralHaloChunks;
+    public RingWorldGenerator proceduralHaloChunks;
     public GameObject parentObject;
     public int circleSegmentCount;
     public int chunkIndex;
@@ -12,7 +12,7 @@ public class HaloSegment : MonoBehaviour
 
     public Dictionary<Vector3, float> vertexNoiseMap;
 
-    public HaloSegment(ProceduralHaloChunks proceduralHaloChunks, GameObject parentObject, int circleSegmentCount, int chunkIndex, int levelOfDetail, int meshLevelOfDetail)
+    public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int circleSegmentCount, int chunkIndex, int levelOfDetail, int meshLevelOfDetail)
     {
         this.proceduralHaloChunks = proceduralHaloChunks;
         this.parentObject = parentObject;
@@ -22,15 +22,15 @@ public class HaloSegment : MonoBehaviour
         this.meshLevelOfDetail = meshLevelOfDetail;
     }
 
-    public void GenerateChunk(GameObject segmentObject, int segmentIndexCount, int segmentVertexCount)
+    public void GenerateChunk(GameObject segmentObject, int segmentIndexCount)
     {
         segmentObject.transform.SetParent(parentObject.transform, false);
 
-        // Add this HaloSegment script to the segmentObject if it doesn't already exist
-        HaloSegment haloSegment = segmentObject.GetComponent<HaloSegment>();
+        // Add this RingWorldChunk script to the segmentObject if it doesn't already exist
+        RingWorldChunk haloSegment = segmentObject.GetComponent<RingWorldChunk>();
         if (haloSegment == null)
         {
-            haloSegment = segmentObject.AddComponent<HaloSegment>();
+            haloSegment = segmentObject.AddComponent<RingWorldChunk>();
         }
 
         haloSegment.proceduralHaloChunks = this.proceduralHaloChunks;
@@ -119,9 +119,9 @@ public class HaloSegment : MonoBehaviour
         newChunk1.transform.SetParent(parentObject.transform, false);
         newChunk2.transform.SetParent(parentObject.transform, false);
 
-        // Generate and assign HaloSegment components to the new chunks
-        HaloSegment haloSegment1 = newChunk1.AddComponent<HaloSegment>();
-        HaloSegment haloSegment2 = newChunk2.AddComponent<HaloSegment>();
+        // Generate and assign RingWorldChunk components to the new chunks
+        RingWorldChunk haloSegment1 = newChunk1.AddComponent<RingWorldChunk>();
+        RingWorldChunk haloSegment2 = newChunk2.AddComponent<RingWorldChunk>();
 
         // Copy relevant properties from the current chunk to the new chunks
         haloSegment1.proceduralHaloChunks = this.proceduralHaloChunks;
@@ -138,12 +138,11 @@ public class HaloSegment : MonoBehaviour
         haloSegment2.levelOfDetail = this.levelOfDetail;
         haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
-        int segmentVertexCount = (proceduralHaloChunks.segmentXVertices + 1) * proceduralHaloChunks.segmentYVertices;
         int segmentIndexCount = proceduralHaloChunks.segmentXVertices * (proceduralHaloChunks.segmentYVertices - 1) * 6;
 
         // You may also need to update mesh data, noise maps, etc. for each chunk.
-        haloSegment1.GenerateChunk(newChunk1, segmentIndexCount, segmentVertexCount);
-        haloSegment2.GenerateChunk(newChunk2, segmentIndexCount, segmentVertexCount);
+        haloSegment1.GenerateChunk(newChunk1, segmentIndexCount);
+        haloSegment2.GenerateChunk(newChunk2, segmentIndexCount);
 
         proceduralHaloChunks.createdSegments.Add(newChunk1);
         proceduralHaloChunks.createdSegments.Add(newChunk2);

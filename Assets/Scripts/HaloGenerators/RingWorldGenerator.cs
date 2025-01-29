@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class ProceduralHaloChunks : MonoBehaviour
+public class RingWorldGenerator : MonoBehaviour
 {
+    [Header("Ringworld")]
     [Range(1, 360)]
-    public int CircleSegmentCount = 4;
+    public int NumberOfCircumferenceChunks = 16;
+
+    [Range(1, 32)]
+    public int NumberOfWidthChunks = 4;
 
     [Range(1, 3000)]
     public int widthInMeters = 3000;
@@ -23,7 +27,7 @@ public class ProceduralHaloChunks : MonoBehaviour
     public int segmentYVertices = 2; // Number of vertices along the Y axis (top and bottom)
 
     // Procedural Terrain
-
+    [Header("Procedural Terrain")]
     public Material material;
 
     // Anything higher than 5 breaks everything
@@ -68,15 +72,11 @@ public class ProceduralHaloChunks : MonoBehaviour
     [Range(0, 100)]
     public float regionTextureScale;
 
-    public List<GameObject> objectsToSpawn;
-
+    [Header("Details")]
     public bool autoUpdate;
 
     [HideInInspector]
     public float circumference;
-
-    //[HideInInspector]
-    //public int mapChunkfactor = 24;
 
     [HideInInspector]
     public float uvScaleX;
@@ -92,7 +92,6 @@ public class ProceduralHaloChunks : MonoBehaviour
 
     [HideInInspector]
     public List<GameObject> createdSegments = new List<GameObject>(); // List to store created segments
-    private List<int> closestSegmentIndices = new List<int>(); // Change to a list to store multiple indices
     
     public GameObject player; // Reference to the player GameObject
 
@@ -133,28 +132,27 @@ public class ProceduralHaloChunks : MonoBehaviour
         circumference = 2 * Mathf.PI * radiusInMeters;
         uvScaleX = circumference / widthInMeters;
 
-        // Calculate vertex and index counts for a single segment
-        int segmentVertexCount = (segmentXVertices + 1) * segmentYVertices;
+        // Calculate index counts for a single segment
         int segmentIndexCount = segmentXVertices * (segmentYVertices - 1) * 6;
 
         // Create segments within the specified range
-        for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(CircleSegmentCount - 1, maxSegmentIndex); i++)
+        for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(NumberOfCircumferenceChunks - 1, maxSegmentIndex); i++)
         {
-            var segmentObject = CreateSegment(null, i, segmentIndexCount, segmentVertexCount, levelOfDetail, meshLevelOfDetail);
+            var segmentObject = CreateSegment(null, i, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
             createdSegments.Add(segmentObject); // Add the created segment to the list
         }
     }
 
     // Make coroutine to visualise creation in editor, you will have to click constantly on the editer though
-    private void CreateSegments(int segmentIndexCount, int segmentVertexCount)
+    private void CreateSegments(int segmentIndexCount)
     {
-        for (int segment = 0; segment < CircleSegmentCount; segment++)
+        for (int segment = 0; segment < NumberOfCircumferenceChunks; segment++)
         {
 #if UNITY_EDITOR
             bool cancel = EditorUtility.DisplayCancelableProgressBar(
                 "Forging Halo Installation",
-                $"Creating segment {segment + 1} of {CircleSegmentCount}",
-                (float)segment / CircleSegmentCount
+                $"Creating segment {segment + 1} of {NumberOfCircumferenceChunks}",
+                (float)segment / NumberOfCircumferenceChunks
             );
 
 
@@ -165,7 +163,7 @@ public class ProceduralHaloChunks : MonoBehaviour
                 break;
             }
 #endif
-            CreateSegment(null, segment, segmentIndexCount, segmentVertexCount, levelOfDetail, meshLevelOfDetail);
+            CreateSegment(null, segment, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
         }
 
         // Clear the progress bar after completion or cancellation
@@ -174,17 +172,17 @@ public class ProceduralHaloChunks : MonoBehaviour
 #endif
     }
 
-    private GameObject CreateSegment(GameObject segmentObject, int segment, int segmentIndexCount, int segmentVertexCount, int lod, int meshLod)
+    private GameObject CreateSegment(GameObject segmentObject, int segment, int segmentIndexCount, int lod, int meshLod)
     {
-        // Create a new HaloSegment instance
-        var haloSegment = new HaloSegment(this, segmentsParent, CircleSegmentCount, segment, lod, meshLod);
+        // Create a new RingWorldChunk instance
+        var haloSegment = new RingWorldChunk(this, segmentsParent, NumberOfCircumferenceChunks, segment, lod, meshLod);
 
         if (segmentObject == null)
         {
             segmentObject = new GameObject(segment.ToString());
         }
         
-        haloSegment.GenerateChunk(segmentObject, segmentIndexCount, segmentVertexCount);
+        haloSegment.GenerateChunk(segmentObject, segmentIndexCount);
 
         return segmentObject; // Return the created segment
     }
@@ -276,7 +274,7 @@ public class ProceduralHaloChunks : MonoBehaviour
                     newClosestSegmentIndex = i;
 
                     // Split up chunk
-                    HaloSegment haloSegment = closestSegment.GetComponent<HaloSegment>();
+                    RingWorldChunk haloSegment = closestSegment.GetComponent<RingWorldChunk>();
                     Debug.Log("checking valid");
                     if (haloSegment != null && haloSegment.meshLevelOfDetail > 0)
                     {

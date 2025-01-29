@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(ProceduralHaloChunks))]
+[CustomEditor(typeof(RingWorldGenerator))]
 public class ProceduralHaloChunksEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -9,7 +9,7 @@ public class ProceduralHaloChunksEditor : Editor
         
 
         // Get a reference to the target script
-        ProceduralHaloChunks proceduralHaloChunks = (ProceduralHaloChunks)target;
+        RingWorldGenerator proceduralHaloChunks = (RingWorldGenerator)target;
         // Add a button to generate the halo
         if (GUILayout.Button("Generate"))
         {
@@ -34,7 +34,7 @@ public class ProceduralHaloChunksEditor : Editor
         minIndex = EditorGUILayout.FloatField(minIndex, GUILayout.Width(50));
 
         // Create a min-max slider for segment indices
-        EditorGUILayout.MinMaxSlider(ref minIndex, ref maxIndex, 0f, proceduralHaloChunks.CircleSegmentCount);
+        EditorGUILayout.MinMaxSlider(ref minIndex, ref maxIndex, 0f, proceduralHaloChunks.NumberOfCircumferenceChunks);
 
         // Create number input for max index
         maxIndex = EditorGUILayout.FloatField(maxIndex, GUILayout.Width(50));
