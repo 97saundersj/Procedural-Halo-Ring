@@ -138,7 +138,7 @@ public class RingWorldChunk : MonoBehaviour
         // Copy relevant properties from the current chunk to the new chunks
         haloSegment1.proceduralHaloChunks = this.proceduralHaloChunks;
         haloSegment1.parentObject = this.parentObject;
-        haloSegment1.numberOfCircumferenceChunks = newChunkIndex1;
+        haloSegment1.numberOfCircumferenceChunks = numberOfCircumferenceChunks * 2;
         haloSegment1.circumferenceChunkIndex = newChunkIndex1;
         haloSegment1.numberOfWidthChunks = numberOfWidthChunks;
         haloSegment1.widthChunkIndex = widthChunkIndex;
@@ -147,7 +147,7 @@ public class RingWorldChunk : MonoBehaviour
 
         haloSegment2.proceduralHaloChunks = this.proceduralHaloChunks;
         haloSegment2.parentObject = this.parentObject;
-        haloSegment2.numberOfCircumferenceChunks = newChunkIndex2;
+        haloSegment2.numberOfCircumferenceChunks = numberOfCircumferenceChunks * 2;
         haloSegment2.circumferenceChunkIndex = newChunkIndex2;
         haloSegment2.numberOfWidthChunks = numberOfWidthChunks;
         haloSegment2.widthChunkIndex = widthChunkIndex;
