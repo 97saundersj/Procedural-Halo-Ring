@@ -42,6 +42,8 @@ public class RingWorldChunk : MonoBehaviour
         haloSegment.parentObject = this.parentObject;
         haloSegment.circumferenceChunkIndex = this.circumferenceChunkIndex;
         haloSegment.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks;
+        haloSegment.widthChunkIndex = this.widthChunkIndex;
+        haloSegment.numberOfWidthChunks = this.numberOfWidthChunks;
         haloSegment.levelOfDetail = this.levelOfDetail;
         haloSegment.meshLevelOfDetail = this.meshLevelOfDetail;
 
@@ -57,6 +59,7 @@ public class RingWorldChunk : MonoBehaviour
         var indices = new int[segmentIndexCount];
 
         var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / numberOfCircumferenceChunks;
+        //var segmentHeight = proceduralHaloChunks.widthInMeters / numberOfWidthChunks;
 
         float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
         float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
@@ -113,8 +116,12 @@ public class RingWorldChunk : MonoBehaviour
     public void SplitChunk()
     {
         // Determine new chunk positions
-        int newChunkIndex1 = circumferenceChunkIndex*2;//circumferenceChunkIndex * 2; // Example logic for new chunk index
-        int newChunkIndex2 = (circumferenceChunkIndex*2)+1;//circumferenceChunkIndex * 2 + 1;
+        int newChunkIndex1 = circumferenceChunkIndex*2;
+        int newChunkIndex2 = (circumferenceChunkIndex*2)+1;
+
+        var index = Mathf.Max(1, widthChunkIndex);
+        int newChunkWidthIndex1 = index * 2;
+        int newChunkWidthIndex2 = (index * 2) + 1;
 
         // Create two new GameObjects for the new chunks
         GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
@@ -131,15 +138,19 @@ public class RingWorldChunk : MonoBehaviour
         // Copy relevant properties from the current chunk to the new chunks
         haloSegment1.proceduralHaloChunks = this.proceduralHaloChunks;
         haloSegment1.parentObject = this.parentObject;
-        haloSegment1.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment1.numberOfCircumferenceChunks = newChunkIndex1;
         haloSegment1.circumferenceChunkIndex = newChunkIndex1;
+        haloSegment1.numberOfWidthChunks = numberOfWidthChunks;
+        haloSegment1.widthChunkIndex = widthChunkIndex;
         haloSegment1.levelOfDetail = this.levelOfDetail;
         haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
         haloSegment2.proceduralHaloChunks = this.proceduralHaloChunks;
         haloSegment2.parentObject = this.parentObject;
-        haloSegment2.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment2.numberOfCircumferenceChunks = newChunkIndex2;
         haloSegment2.circumferenceChunkIndex = newChunkIndex2;
+        haloSegment2.numberOfWidthChunks = numberOfWidthChunks;
+        haloSegment2.widthChunkIndex = widthChunkIndex;
         haloSegment2.levelOfDetail = this.levelOfDetail;
         haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
@@ -178,6 +189,10 @@ public class RingWorldChunk : MonoBehaviour
         float angleStep = segmentWidth / segmentXVertices;
         float startAngle = chunkIndex * segmentWidth;
 
+        float segmentHeight = proceduralHaloChunks.widthInMeters / numberOfWidthChunks;
+        float heightStep = segmentHeight / segmentYVertices;
+        float startHeight = widthChunkIndex * segmentHeight;
+
         int noiseMapWidth = noiseMap.GetLength(0);
         int noiseMapHeight = noiseMap.GetLength(1);
 
@@ -186,15 +201,16 @@ public class RingWorldChunk : MonoBehaviour
             float angle = startAngle + x * angleStep;
             for (int y = 0; y < segmentYVertices; y++)
             {
-                float width = y * (widthInMeters / (segmentYVertices - 1));
-
+                //float width = y * (widthInMeters / (segmentYVertices - 1));
+                float height = startHeight + y * heightStep; // Use startHeight and heightStep
+                
                 int noiseX = noiseMapHeight - 1 - (int)((float)y / segmentYVertices * (noiseMapHeight - 1));
                 int noiseY = (int)((float)x / segmentXVertices * (noiseMapWidth - 1));
 
                 float noiseValue = noiseMap[noiseY, noiseX];
                 float adjustedRadius = radiusInMeters - heightMultiplier * noiseValue;
 
-                Vector3 vertex = new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius);
+                Vector3 vertex = new Vector3(Mathf.Cos(angle) * adjustedRadius, height, Mathf.Sin(angle) * adjustedRadius);
                 vertices.Add(vertex);
 
                 // Store the vertex and its noise value in the dictionary
@@ -362,7 +378,7 @@ public class RingWorldChunk : MonoBehaviour
         int octaves = proceduralHaloChunks.octaves;
         float persistance = proceduralHaloChunks.persistance;
         float lacunarity = proceduralHaloChunks.lacunarity;
-        Vector2 offset = new(circumferenceChunkIndex * widthScale, 0);
+        Vector2 offset = new(circumferenceChunkIndex * widthScale, widthChunkIndex * heightScale);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, proceduralHaloChunks.heightCurve, proceduralHaloChunks.heightMultiplier);
     }

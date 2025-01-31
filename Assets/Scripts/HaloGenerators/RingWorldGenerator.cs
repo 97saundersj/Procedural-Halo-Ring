@@ -84,7 +84,7 @@ public class RingWorldGenerator : MonoBehaviour
     private GameObject segmentsParent;
 
     [HideInInspector]
-    public int minSegmentIndex = -1; // Minimum segment index
+    public int minSegmentIndex = 1; // Minimum segment index
     [HideInInspector]
     public int maxSegmentIndex = 360; // Maximum segment index
 
