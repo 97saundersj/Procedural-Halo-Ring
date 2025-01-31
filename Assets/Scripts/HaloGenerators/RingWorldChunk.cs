@@ -109,6 +109,11 @@ public class RingWorldChunk : MonoBehaviour
             meshCollider.sharedMesh = segmentMesh;
         }
 
+        if (proceduralHaloChunks.saveTexturesFiles)
+        {
+            CreateTexture(widthScale, heightScale, noiseMap, false);
+        }
+
         SpawnObjectsOnSurface(segmentObject, vertices, proceduralHaloChunks.regions);
     }
 
