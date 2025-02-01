@@ -61,7 +61,7 @@ public class RingWorldChunk : MonoBehaviour
         var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
 
         float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
-        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
+        float heightScale = (ringWorldGenerator.widthInMeters / numberOfWidthChunks) / ringWorldGenerator.textureMetersPerPixel;
 
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
@@ -110,7 +110,8 @@ public class RingWorldChunk : MonoBehaviour
 
         if (ringWorldGenerator.saveTexturesFiles)
         {
-            CreateTexture(widthScale, heightScale, noiseMap, false);
+            var tex = CreateTexture(widthScale, heightScale, noiseMap, false);
+            meshRenderer.material = CreateDebugMaterial(noiseMap, tex);
         }
 
         SpawnObjectsOnSurface(segmentObject, vertices, ringWorldGenerator.regions);
@@ -124,16 +125,16 @@ public class RingWorldChunk : MonoBehaviour
         float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
         float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
 
-        var splitAlongCircumference = widthScale >= heightScale;
+        var splitAlongCircumference = true;//widthScale >= heightScale;
 
         // Determine new chunk positions
         var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
-        int newChunkIndex1 = splitAlongCircumference ? circumferenceChunkIndex * 2 : circumferenceChunkIndex;
-        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1 : circumferenceChunkIndex;
+        int newChunkIndex1 = splitAlongCircumference ? (circumferenceChunkIndex * 2) : circumferenceChunkIndex;
+        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1: circumferenceChunkIndex;
 
         var newnumberOfWidthChunks = !splitAlongCircumference ? this.numberOfWidthChunks * 2 : this.numberOfWidthChunks;
-        int newWidthChunkIndex1 = !splitAlongCircumference ? widthChunkIndex * 2 : widthChunkIndex;
-        int newWidthChunkIndex2 = !splitAlongCircumference ? (widthChunkIndex * 2) + 1 : widthChunkIndex;
+        int newWidthChunkIndex1 = !splitAlongCircumference ? (widthChunkIndex * 2)  : widthChunkIndex;
+        int newWidthChunkIndex2 = !splitAlongCircumference ? (widthChunkIndex * 2) + 1: widthChunkIndex;
 
         // Create two new GameObjects for the new chunks
         GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
@@ -348,6 +349,35 @@ public class RingWorldChunk : MonoBehaviour
         {
             newMaterial.SetTexture($"_Texture{i}", ringWorldGenerator.regions[i].texture);
         }
+
+        return newMaterial;
+    }
+
+    private Material CreateDebugMaterial(float[,] heightMap, Texture2D proceduralTexture)
+    {
+        Debug.Log("Updating segment material...");
+
+        // Create a new material instance for this segment
+        Material newMaterial = new Material(Shader.Find("Standard"));
+        newMaterial.mainTexture = proceduralTexture;
+
+        //newMaterial.SetTexture("_HeightMap", heightMap);
+        //newMaterial.SetFloat("_HeightScale", 0.1f); // Adjust the height scale as needed
+
+        // Set the height map as the parallax map
+        //newMaterial.SetTexture("_ParallaxMap", heightMap);
+        //newMaterial.SetFloat("_Parallax", 0.02f); // Adjust the parallax scale as needed
+
+        // Convert heightMap to a normal map
+        Texture2D normalMap = ConvertNoiseMapToNormalMap(heightMap);
+
+        // Set the bump map texture
+        newMaterial.SetTexture("_BumpMap", normalMap);
+        newMaterial.SetFloat("_BumpScale", 0.5f);
+        newMaterial.EnableKeyword("_NORMALMAP");
+
+        // Set the smoothness of the material
+        newMaterial.SetFloat("_Glossiness", 0f);
 
         return newMaterial;
     }
