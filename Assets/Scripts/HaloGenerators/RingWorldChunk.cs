@@ -7,17 +7,22 @@ public class RingWorldChunk : MonoBehaviour
     public GameObject parentObject;
     public int numberOfCircumferenceChunks;
     public int circumferenceChunkIndex;
+    public int numberOfWidthChunks;
+    public int widthChunkIndex;
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
     public Dictionary<Vector3, float> vertexNoiseMap;
 
-    public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int circleSegmentCount, int chunkIndex, int levelOfDetail, int meshLevelOfDetail)
+    public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int numberOfCircumferenceChunks, int circumferenceChunkIndex, 
+        int numberOfWidthChunks, int widthChunkIndex, int levelOfDetail, int meshLevelOfDetail)
     {
         this.ringWorldGenerator = proceduralHaloChunks;
         this.parentObject = parentObject;
-        this.numberOfCircumferenceChunks = circleSegmentCount;
-        this.circumferenceChunkIndex = chunkIndex;
+        this.numberOfCircumferenceChunks = numberOfCircumferenceChunks;
+        this.circumferenceChunkIndex = circumferenceChunkIndex;
+        this.numberOfWidthChunks = numberOfWidthChunks;
+        this.widthChunkIndex = widthChunkIndex;
         this.levelOfDetail = levelOfDetail;
         this.meshLevelOfDetail = meshLevelOfDetail;
     }
