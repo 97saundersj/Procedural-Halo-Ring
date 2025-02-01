@@ -119,9 +119,21 @@ public class RingWorldChunk : MonoBehaviour
     // New method to split a chunk into two new chunks
     public void SplitChunk()
     {
+        var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
+
+        float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
+        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
+
+        var splitAlongCircumference = widthScale >= heightScale;
+
         // Determine new chunk positions
-        int newChunkIndex1 = circumferenceChunkIndex*2;//circumferenceChunkIndex * 2; // Example logic for new chunk index
-        int newChunkIndex2 = (circumferenceChunkIndex*2)+1;//circumferenceChunkIndex * 2 + 1;
+        var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
+        int newChunkIndex1 = splitAlongCircumference ? circumferenceChunkIndex * 2 : circumferenceChunkIndex;
+        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1 : circumferenceChunkIndex;
+
+        var newnumberOfWidthChunks = !splitAlongCircumference ? this.numberOfWidthChunks * 2 : this.numberOfWidthChunks;
+        int newWidthChunkIndex1 = !splitAlongCircumference ? widthChunkIndex * 2 : widthChunkIndex;
+        int newWidthChunkIndex2 = !splitAlongCircumference ? (widthChunkIndex * 2) + 1 : widthChunkIndex;
 
         // Create two new GameObjects for the new chunks
         GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
@@ -138,19 +150,19 @@ public class RingWorldChunk : MonoBehaviour
         // Copy relevant properties from the current chunk to the new chunks
         haloSegment1.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment1.parentObject = this.parentObject;
-        haloSegment1.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment1.numberOfCircumferenceChunks = newnumberOfCircumferenceChunks;
         haloSegment1.circumferenceChunkIndex = newChunkIndex1;
-        haloSegment1.numberOfWidthChunks = this.numberOfWidthChunks;
-        haloSegment1.widthChunkIndex = widthChunkIndex;
+        haloSegment1.numberOfWidthChunks = newnumberOfWidthChunks;
+        haloSegment1.widthChunkIndex = newWidthChunkIndex1;
         haloSegment1.levelOfDetail = this.levelOfDetail;
         haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
         haloSegment2.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment2.parentObject = this.parentObject;
-        haloSegment2.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment2.numberOfCircumferenceChunks = newnumberOfCircumferenceChunks;
         haloSegment2.circumferenceChunkIndex = newChunkIndex2;
-        haloSegment2.numberOfWidthChunks = this.numberOfWidthChunks;
-        haloSegment2.widthChunkIndex = widthChunkIndex;
+        haloSegment2.numberOfWidthChunks = newnumberOfWidthChunks;
+        haloSegment2.widthChunkIndex = newWidthChunkIndex2;
         haloSegment2.levelOfDetail = this.levelOfDetail;
         haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
