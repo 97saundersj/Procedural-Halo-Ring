@@ -18,7 +18,7 @@ public class HaloChunkEditor : Editor
         // Add a button to generate the halo
         if (GUILayout.Button("Generate"))
         {
-            int segmentIndexCount = haloChunk.proceduralHaloChunks.segmentXVertices * (haloChunk.proceduralHaloChunks.segmentYVertices - 1) * 6;
+            int segmentIndexCount = haloChunk.ringWorldGenerator.segmentXVertices * (haloChunk.ringWorldGenerator.segmentYVertices - 1) * 6;
 
             haloChunk.GenerateChunk(haloChunk.gameObject, segmentIndexCount);
         }

@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class RingWorldChunk : MonoBehaviour
 {
-    public RingWorldGenerator proceduralHaloChunks;
+    public RingWorldGenerator ringWorldGenerator;
     public GameObject parentObject;
-    public int circleSegmentCount;
-    public int chunkIndex;
+    public int numberOfCircumferenceChunks;
+    public int circumferenceChunkIndex;
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
@@ -14,10 +14,10 @@ public class RingWorldChunk : MonoBehaviour
 
     public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int circleSegmentCount, int chunkIndex, int levelOfDetail, int meshLevelOfDetail)
     {
-        this.proceduralHaloChunks = proceduralHaloChunks;
+        this.ringWorldGenerator = proceduralHaloChunks;
         this.parentObject = parentObject;
-        this.circleSegmentCount = circleSegmentCount;
-        this.chunkIndex = chunkIndex;
+        this.numberOfCircumferenceChunks = circleSegmentCount;
+        this.circumferenceChunkIndex = chunkIndex;
         this.levelOfDetail = levelOfDetail;
         this.meshLevelOfDetail = meshLevelOfDetail;
     }
@@ -33,16 +33,16 @@ public class RingWorldChunk : MonoBehaviour
             haloSegment = segmentObject.AddComponent<RingWorldChunk>();
         }
 
-        haloSegment.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment.parentObject = this.parentObject;
-        haloSegment.chunkIndex = this.chunkIndex;
-        haloSegment.circleSegmentCount = this.circleSegmentCount;
+        haloSegment.circumferenceChunkIndex = this.circumferenceChunkIndex;
+        haloSegment.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks;
         haloSegment.levelOfDetail = this.levelOfDetail;
         haloSegment.meshLevelOfDetail = this.meshLevelOfDetail;
 
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
+        int segmentXVertices = ringWorldGenerator.segmentXVertices / detailFactor;
+        int segmentYVertices = ringWorldGenerator.segmentYVertices / detailFactor;
 
         // Calculate the correct number of vertices
         int totalVertices = (segmentXVertices + 1) * segmentYVertices;
@@ -51,10 +51,10 @@ public class RingWorldChunk : MonoBehaviour
         var uv = new Vector2[totalVertices];
         var indices = new int[segmentIndexCount];
 
-        var segmentWidth = (2 * Mathf.PI * proceduralHaloChunks.radiusInMeters) / circleSegmentCount;
+        var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
 
-        float widthScale = segmentWidth / proceduralHaloChunks.textureMetersPerPixel;
-        float heightScale = proceduralHaloChunks.widthInMeters / proceduralHaloChunks.textureMetersPerPixel;
+        float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
+        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
 
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
@@ -68,14 +68,14 @@ public class RingWorldChunk : MonoBehaviour
         // Update the material of the MeshRenderer
         meshRenderer.material = CreateMaterial(noiseMap, null, segmentObject);
 
-        // Generate vertices and indices for this chunkIndex
-        GenerateSegmentVertices(chunkIndex, vertices, noiseMap);
+        // Generate vertices and indices for this circumferenceChunkIndex
+        GenerateSegmentVertices(circumferenceChunkIndex, vertices, noiseMap);
         GenerateSegmentIndices(indices);
 
-        // Calculate UVs for this chunkIndex
+        // Calculate UVs for this circumferenceChunkIndex
         CalculateSegmentUVs(uv, segmentXVertices, segmentYVertices);
 
-        // Set mesh data for this chunkIndex
+        // Set mesh data for this circumferenceChunkIndex
         Mesh segmentMesh = GenerateMesh(vertices, uv, indices);
 
         // Check if a MeshFilter already exists
@@ -87,11 +87,11 @@ public class RingWorldChunk : MonoBehaviour
         }
         meshFilter.mesh = segmentMesh;
 
-        // Rotate the chunkIndex object
+        // Rotate the circumferenceChunkIndex object
         segmentObject.transform.rotation = Quaternion.Euler(0, 0, 90);
 
-        // Add a MeshCollider to the chunkIndex
-        if (meshLevelOfDetail == proceduralHaloChunks.maxMeshLevelOfDetail)
+        // Add a MeshCollider to the circumferenceChunkIndex
+        if (meshLevelOfDetail == ringWorldGenerator.maxMeshLevelOfDetail)
         {
             MeshCollider meshCollider = segmentObject.GetComponent<MeshCollider>();
             if (meshCollider == null)
@@ -101,20 +101,20 @@ public class RingWorldChunk : MonoBehaviour
             meshCollider.sharedMesh = segmentMesh;
         }
 
-        if (proceduralHaloChunks.saveTexturesFiles)
+        if (ringWorldGenerator.saveTexturesFiles)
         {
             CreateTexture(widthScale, heightScale, noiseMap, false);
         }
 
-        SpawnObjectsOnSurface(segmentObject, vertices, proceduralHaloChunks.regions);
+        SpawnObjectsOnSurface(segmentObject, vertices, ringWorldGenerator.regions);
     }
 
     // New method to split a chunk into two new chunks
     public void SplitChunk()
     {
         // Determine new chunk positions
-        int newChunkIndex1 = chunkIndex*2;//chunkIndex * 2; // Example logic for new chunk index
-        int newChunkIndex2 = (chunkIndex*2)+1;//chunkIndex * 2 + 1;
+        int newChunkIndex1 = circumferenceChunkIndex*2;//circumferenceChunkIndex * 2; // Example logic for new chunk index
+        int newChunkIndex2 = (circumferenceChunkIndex*2)+1;//circumferenceChunkIndex * 2 + 1;
 
         // Create two new GameObjects for the new chunks
         GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
@@ -129,28 +129,28 @@ public class RingWorldChunk : MonoBehaviour
         RingWorldChunk haloSegment2 = newChunk2.AddComponent<RingWorldChunk>();
 
         // Copy relevant properties from the current chunk to the new chunks
-        haloSegment1.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment1.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment1.parentObject = this.parentObject;
-        haloSegment1.circleSegmentCount = this.circleSegmentCount * 2;
-        haloSegment1.chunkIndex = newChunkIndex1;
+        haloSegment1.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment1.circumferenceChunkIndex = newChunkIndex1;
         haloSegment1.levelOfDetail = this.levelOfDetail;
         haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
-        haloSegment2.proceduralHaloChunks = this.proceduralHaloChunks;
+        haloSegment2.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment2.parentObject = this.parentObject;
-        haloSegment2.circleSegmentCount = this.circleSegmentCount * 2;
-        haloSegment2.chunkIndex = newChunkIndex2;
+        haloSegment2.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment2.circumferenceChunkIndex = newChunkIndex2;
         haloSegment2.levelOfDetail = this.levelOfDetail;
         haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
-        int segmentIndexCount = proceduralHaloChunks.segmentXVertices * (proceduralHaloChunks.segmentYVertices - 1) * 6;
+        int segmentIndexCount = ringWorldGenerator.segmentXVertices * (ringWorldGenerator.segmentYVertices - 1) * 6;
 
         // You may also need to update mesh data, noise maps, etc. for each chunk.
         haloSegment1.GenerateChunk(newChunk1, segmentIndexCount);
         haloSegment2.GenerateChunk(newChunk2, segmentIndexCount);
 
-        proceduralHaloChunks.createdSegments.Add(newChunk1);
-        proceduralHaloChunks.createdSegments.Add(newChunk2);
+        ringWorldGenerator.createdSegments.Add(newChunk1);
+        ringWorldGenerator.createdSegments.Add(newChunk2);
         // Check if in edit mode and use DestroyImmediate if true
         if (Application.isEditor && !Application.isPlaying)
         {
@@ -160,21 +160,21 @@ public class RingWorldChunk : MonoBehaviour
         {
             Destroy(gameObject); // Use Destroy during runtime
         }
-        proceduralHaloChunks.createdSegments.Remove(gameObject);
+        ringWorldGenerator.createdSegments.Remove(gameObject);
     }
 
     public void GenerateSegmentVertices(int chunkIndex, List<Vector3> vertices, float[,] noiseMap)
     {
         vertexNoiseMap = new Dictionary<Vector3, float>();
 
-        float heightMultiplier = proceduralHaloChunks.meshHeightMultiplier;
+        float heightMultiplier = ringWorldGenerator.meshHeightMultiplier;
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
-        float widthInMeters = proceduralHaloChunks.widthInMeters;
-        float radiusInMeters = proceduralHaloChunks.radiusInMeters;
+        int segmentXVertices = ringWorldGenerator.segmentXVertices / detailFactor;
+        int segmentYVertices = ringWorldGenerator.segmentYVertices / detailFactor;
+        float widthInMeters = ringWorldGenerator.widthInMeters;
+        float radiusInMeters = ringWorldGenerator.radiusInMeters;
 
-        float segmentWidth = Mathf.PI * 2f / circleSegmentCount;
+        float segmentWidth = Mathf.PI * 2f / numberOfCircumferenceChunks;
         float angleStep = segmentWidth / segmentXVertices;
         float startAngle = chunkIndex * segmentWidth;
 
@@ -206,8 +206,8 @@ public class RingWorldChunk : MonoBehaviour
     public void GenerateSegmentIndices(int[] indices)
     {
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
-        int segmentXVertices = proceduralHaloChunks.segmentXVertices / detailFactor;
-        int segmentYVertices = proceduralHaloChunks.segmentYVertices / detailFactor;
+        int segmentXVertices = ringWorldGenerator.segmentXVertices / detailFactor;
+        int segmentYVertices = ringWorldGenerator.segmentYVertices / detailFactor;
 
         for (int x = 0; x < segmentXVertices; x++)
         {
@@ -239,16 +239,16 @@ public class RingWorldChunk : MonoBehaviour
 
     private Texture2D CreateTexture(float widthScale, float heightScale, float[,] noiseMap, bool createHeightMap)
     {
-        //Debug.Log("Updating chunkIndex Texture...");
+        //Debug.Log("Updating circumferenceChunkIndex Texture...");
 
         Texture2D proceduralTexture = GenerateProceduralNoiseTexture(widthScale, heightScale, noiseMap, createHeightMap);
         proceduralTexture.wrapMode = TextureWrapMode.Clamp;
         proceduralTexture.filterMode = FilterMode.Bilinear;
 
         // Save the texture for visualization
-        if (proceduralHaloChunks.saveTexturesFiles)
+        if (ringWorldGenerator.saveTexturesFiles)
         {
-            SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + (createHeightMap ? "HeightMap_" : "") + chunkIndex);
+            SaveTextureAsPNG(proceduralTexture, "HaloSegmentTexture_" + (createHeightMap ? "HeightMap_" : "") + circumferenceChunkIndex);
         }
 
         return proceduralTexture;
@@ -288,15 +288,15 @@ public class RingWorldChunk : MonoBehaviour
         // Create a new material instance using the custom shader
         Material newMaterial = new Material(Shader.Find("Custom/Terrain"));
 
-        // Extract colors and height percentages from proceduralHaloChunks.regions
-        int baseColourCount = proceduralHaloChunks.regions.Length;
+        // Extract colors and height percentages from ringWorldGenerator.regions
+        int baseColourCount = ringWorldGenerator.regions.Length;
         Color[] baseColours = new Color[baseColourCount];
         float[] baseStartHeights = new float[baseColourCount];
 
         for (int i = 0; i < baseColourCount; i++)
         {
-            baseColours[i] = proceduralHaloChunks.regions[i].colour;
-            baseStartHeights[i] = proceduralHaloChunks.regions[i].height; // Assuming 'heightPercentage' is defined
+            baseColours[i] = ringWorldGenerator.regions[i].colour;
+            baseStartHeights[i] = ringWorldGenerator.regions[i].height; // Assuming 'heightPercentage' is defined
         }
 
         // Assign shader properties
@@ -308,17 +308,17 @@ public class RingWorldChunk : MonoBehaviour
         newMaterial.SetVector("_Center", gameobject.transform.position);
 
         // Set the min and max radius
-        newMaterial.SetFloat("_MinRadius", proceduralHaloChunks.radiusInMeters);
-        newMaterial.SetFloat("_MaxRadius", proceduralHaloChunks.radiusInMeters - (proceduralHaloChunks.meshHeightMultiplier / 2));
+        newMaterial.SetFloat("_MinRadius", ringWorldGenerator.radiusInMeters);
+        newMaterial.SetFloat("_MaxRadius", ringWorldGenerator.radiusInMeters - (ringWorldGenerator.meshHeightMultiplier / 2));
 
         // Set the blend strength
-        newMaterial.SetFloat("_BlendStrength", proceduralHaloChunks.regionBlendStrength); // Assuming 'blendStrength' is defined in proceduralHaloChunks
+        newMaterial.SetFloat("_BlendStrength", ringWorldGenerator.regionBlendStrength); // Assuming 'blendStrength' is defined in ringWorldGenerator
 
-        newMaterial.SetFloat("_TextureScale", proceduralHaloChunks.regionTextureScale);
+        newMaterial.SetFloat("_TextureScale", ringWorldGenerator.regionTextureScale);
 
         for (int i = 0; i < baseColourCount; i++)
         {
-            newMaterial.SetTexture($"_Texture{i}", proceduralHaloChunks.regions[i].texture);
+            newMaterial.SetTexture($"_Texture{i}", ringWorldGenerator.regions[i].texture);
         }
 
         return newMaterial;
@@ -326,7 +326,7 @@ public class RingWorldChunk : MonoBehaviour
 
     private Mesh GenerateMesh(List<Vector3> vertices, Vector2[] uv, int[] indices)
     {
-        Debug.Log("Updating chunkIndex mesh...");
+        Debug.Log("Updating circumferenceChunkIndex mesh...");
 
         Mesh segmentMesh = new Mesh { name = "Procedural Halo Segment" };
         segmentMesh.SetVertices(vertices);
@@ -357,14 +357,14 @@ public class RingWorldChunk : MonoBehaviour
         int mapWidth = (Mathf.RoundToInt(widthScale)) + 1;
         var mapHeight = (Mathf.RoundToInt(heightScale)) + 1;
 
-        int seed = proceduralHaloChunks.seed;
-        float scale = proceduralHaloChunks.noiseScale;
-        int octaves = proceduralHaloChunks.octaves;
-        float persistance = proceduralHaloChunks.persistance;
-        float lacunarity = proceduralHaloChunks.lacunarity;
-        Vector2 offset = new(chunkIndex * widthScale, 0);
+        int seed = ringWorldGenerator.seed;
+        float scale = ringWorldGenerator.noiseScale;
+        int octaves = ringWorldGenerator.octaves;
+        float persistance = ringWorldGenerator.persistance;
+        float lacunarity = ringWorldGenerator.lacunarity;
+        Vector2 offset = new(circumferenceChunkIndex * widthScale, 0);
 
-        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, proceduralHaloChunks.heightCurve, proceduralHaloChunks.heightMultiplier);
+        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier);
     }
 
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
@@ -376,12 +376,12 @@ public class RingWorldChunk : MonoBehaviour
         int mapHeight = noiseMap.GetLength(1) / detailFactor;
 
         Color[] colourMap = new Color[mapWidth * mapHeight];
-        Texture2D[] regionTextures = new Texture2D[proceduralHaloChunks.regions.Length];
+        Texture2D[] regionTextures = new Texture2D[ringWorldGenerator.regions.Length];
 
         // Load or assign textures for each region
-        for (int i = 0; i < proceduralHaloChunks.regions.Length; i++)
+        for (int i = 0; i < ringWorldGenerator.regions.Length; i++)
         {
-            regionTextures[i] = proceduralHaloChunks.regions[i].texture; // Assuming each region has a 'texture' property
+            regionTextures[i] = ringWorldGenerator.regions[i].texture; // Assuming each region has a 'texture' property
         }
 
         for (int y = 0; y < mapHeight; y++)
@@ -389,9 +389,9 @@ public class RingWorldChunk : MonoBehaviour
             for (int x = 0; x < mapWidth; x++)
             {
                 float currentHeight = noiseMap[x * detailFactor, y * detailFactor];
-                for (int i = 0; i < proceduralHaloChunks.regions.Length; i++)
+                for (int i = 0; i < ringWorldGenerator.regions.Length; i++)
                 {
-                    if (currentHeight <= proceduralHaloChunks.regions[i].height)
+                    if (currentHeight <= ringWorldGenerator.regions[i].height)
                     {
                         // Check if the texture is not null before using it
                         if (regionTextures[i] != null)
@@ -423,7 +423,7 @@ public class RingWorldChunk : MonoBehaviour
 
     public void SpawnObjectsOnSurface(GameObject parentObject, List<Vector3> vertices, TerrainType[] terrainTypes)
     {
-        if (meshLevelOfDetail != proceduralHaloChunks.maxMeshLevelOfDetail)
+        if (meshLevelOfDetail != ringWorldGenerator.maxMeshLevelOfDetail)
         {
             return; // Only spawn objects at the highest mesh level of detail
         }
