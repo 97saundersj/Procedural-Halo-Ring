@@ -12,6 +12,9 @@ public class RingWorldChunk : MonoBehaviour
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
+    public float xOffset;
+    public float yOffset;
+
     public Dictionary<Vector3, float> vertexNoiseMap;
 
     public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int numberOfCircumferenceChunks, int circumferenceChunkIndex, 
@@ -46,6 +49,9 @@ public class RingWorldChunk : MonoBehaviour
         haloSegment.numberOfWidthChunks = this.numberOfWidthChunks;
         haloSegment.levelOfDetail = this.levelOfDetail;
         haloSegment.meshLevelOfDetail = this.meshLevelOfDetail;
+
+        haloSegment.xOffset = this.xOffset;
+        haloSegment.yOffset = this.yOffset;
 
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = ringWorldGenerator.segmentXVertices / detailFactor;
@@ -130,7 +136,7 @@ public class RingWorldChunk : MonoBehaviour
         // Determine new chunk positions
         var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
         int newChunkIndex1 = splitAlongCircumference ? (circumferenceChunkIndex * 2) : circumferenceChunkIndex;
-        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1: circumferenceChunkIndex;
+        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1 : circumferenceChunkIndex;
 
         var newnumberOfWidthChunks = !splitAlongCircumference ? this.numberOfWidthChunks * 2 : this.numberOfWidthChunks;
         int newWidthChunkIndex1 = !splitAlongCircumference ? (widthChunkIndex * 2)  : widthChunkIndex;
@@ -283,35 +289,6 @@ public class RingWorldChunk : MonoBehaviour
         return proceduralTexture;
     }
 
-    private Texture2D ConvertNoiseMapToNormalMap(float[,] noiseMap)
-    {
-        int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
-        Texture2D normalMap = new Texture2D(width, height, TextureFormat.RGBA32, false);
-
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                float xLeft = noiseMap[x - 1 < 0 ? x : x - 1, y];
-                float xRight = noiseMap[x + 1 >= width ? x : x + 1, y];
-                float yUp = noiseMap[x, y + 1 >= height ? y : y + 1];
-                float yDown = noiseMap[x, y - 1 < 0 ? y : y - 1];
-
-                float xDelta = (xRight - xLeft) * 0.5f;
-                float yDelta = (yUp - yDown) * 0.5f;
-
-                Vector3 normal = new Vector3(-xDelta, -yDelta, 1.0f).normalized;
-                Color normalColor = new Color(normal.x * 0.5f + 0.5f, normal.y * 0.5f + 0.5f, normal.z * 0.5f + 0.5f);
-
-                normalMap.SetPixel(x, y, normalColor);
-            }
-        }
-
-        normalMap.Apply();
-        return normalMap;
-    }
-
     private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture, GameObject gameobject)
     {
         // Create a new material instance using the custom shader
@@ -361,21 +338,6 @@ public class RingWorldChunk : MonoBehaviour
         Material newMaterial = new Material(Shader.Find("Standard"));
         newMaterial.mainTexture = proceduralTexture;
 
-        //newMaterial.SetTexture("_HeightMap", heightMap);
-        //newMaterial.SetFloat("_HeightScale", 0.1f); // Adjust the height scale as needed
-
-        // Set the height map as the parallax map
-        //newMaterial.SetTexture("_ParallaxMap", heightMap);
-        //newMaterial.SetFloat("_Parallax", 0.02f); // Adjust the parallax scale as needed
-
-        // Convert heightMap to a normal map
-        Texture2D normalMap = ConvertNoiseMapToNormalMap(heightMap);
-
-        // Set the bump map texture
-        newMaterial.SetTexture("_BumpMap", normalMap);
-        newMaterial.SetFloat("_BumpScale", 0.5f);
-        newMaterial.EnableKeyword("_NORMALMAP");
-
         // Set the smoothness of the material
         newMaterial.SetFloat("_Glossiness", 0f);
 
@@ -420,7 +382,10 @@ public class RingWorldChunk : MonoBehaviour
         int octaves = ringWorldGenerator.octaves;
         float persistance = ringWorldGenerator.persistance;
         float lacunarity = ringWorldGenerator.lacunarity;
-        Vector2 offset = new(circumferenceChunkIndex * widthScale, widthChunkIndex * heightScale);
+
+        xOffset = circumferenceChunkIndex * widthScale;
+        yOffset = (widthChunkIndex * heightScale);
+        Vector2 offset = new(xOffset, yOffset);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier);
     }
