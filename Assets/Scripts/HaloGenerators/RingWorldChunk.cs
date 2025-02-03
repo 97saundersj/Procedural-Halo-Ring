@@ -69,6 +69,9 @@ public class RingWorldChunk : MonoBehaviour
         float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
         float heightScale = (ringWorldGenerator.widthInMeters / numberOfWidthChunks) / ringWorldGenerator.textureMetersPerPixel;
 
+        Debug.Log("segmentWidth: " + segmentWidth);
+        Debug.Log("widthScale: " + widthScale);
+
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
         // Check if a MeshRenderer already exists
@@ -131,7 +134,7 @@ public class RingWorldChunk : MonoBehaviour
         float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
         float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
 
-        var splitAlongCircumference = true;//widthScale >= heightScale;
+        var splitAlongCircumference = widthScale >= heightScale;
 
         // Determine new chunk positions
         var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
@@ -209,7 +212,7 @@ public class RingWorldChunk : MonoBehaviour
         float startAngle = chunkIndex * segmentWidth;
 
         float segmentHeight = ringWorldGenerator.widthInMeters / numberOfWidthChunks;
-        float heightStep = segmentHeight / segmentYVertices;
+        float heightStep = segmentHeight / (segmentYVertices - 1);
         float startHeight = widthChunkIndex * segmentHeight;
 
         int noiseMapWidth = noiseMap.GetLength(0);
@@ -220,7 +223,7 @@ public class RingWorldChunk : MonoBehaviour
             float angle = startAngle + x * angleStep;
             for (int y = 0; y < segmentYVertices; y++)
             {
-                float width = y * (widthInMeters / (segmentYVertices - 1));
+                //float width = y * (widthInMeters / (segmentYVertices - 1));
                 float height = startHeight + y * heightStep;
 
                 int noiseX = noiseMapHeight - 1 - (int)((float)y / segmentYVertices * (noiseMapHeight - 1));
@@ -383,9 +386,10 @@ public class RingWorldChunk : MonoBehaviour
         float persistance = ringWorldGenerator.persistance;
         float lacunarity = ringWorldGenerator.lacunarity;
 
-        xOffset = circumferenceChunkIndex * widthScale;
-        yOffset = (widthChunkIndex * heightScale);
+        xOffset = (circumferenceChunkIndex * widthScale) + (widthScale/2f);
+        yOffset = - (widthChunkIndex * heightScale) - (heightScale/2f);
         Vector2 offset = new(xOffset, yOffset);
+        Debug.Log("xOffset: " + xOffset);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier);
     }

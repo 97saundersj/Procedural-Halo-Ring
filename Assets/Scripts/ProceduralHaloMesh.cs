@@ -19,10 +19,10 @@ public class ProceduralHaloMesh : MonoBehaviour
     [Range(3, 300)]
     public int CircleSegmentCount;
 
-    [Range(0.01f, 3000)]
+    [Range(0.01f, 30000)]
     public float widthInMeters;
 
-    [Range(0.1f, 100000f)]
+    [Range(0.1f, 1000000f)]
     public float radiusInMeters;
 
     private Mesh mesh;

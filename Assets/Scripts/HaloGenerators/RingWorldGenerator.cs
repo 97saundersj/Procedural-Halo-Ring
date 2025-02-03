@@ -12,10 +12,10 @@ public class RingWorldGenerator : MonoBehaviour
     [Range(1, 32)]
     public int NumberOfWidthChunks = 4;
 
-    [Range(1, 3000)]
+    [Range(1, 30000)]
     public int widthInMeters = 3000;
 
-    [Range(0.1f, 50000f)]
+    [Range(1f, 500000f)]
     public float radiusInMeters = 50000f;
 
     // Anything higher than 5 breaks everything
