@@ -11,10 +11,14 @@ public static class Noise
         // Adjust the resolution based on levelOfDetail
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, levelOfDetail));
 
+        // Calculate the effective map dimensions based on the level of detail
+        int effectiveWidth = mapWidth / detailFactor;
+        mapHeight = mapHeight / detailFactor;
+
         Vector2 sampleCentre = new Vector2(0, 0);
         var normalizeMode = NormalizeMode.Global;
 
-        float[,] noiseMap = new float[mapWidth, mapHeight];
+        float[,] noiseMap = new float[effectiveWidth, mapHeight];
 
         System.Random prng = new System.Random(seed);
         Vector2[] octaveOffsets = new Vector2[octaves];
@@ -33,12 +37,12 @@ public static class Noise
 
         float maxLocalNoiseHeight = float.MinValue;
         float minLocalNoiseHeight = float.MaxValue;
-        float halfWidth = mapWidth / 2f;
+        float halfWidth = effectiveWidth / 2f;
         float halfHeight = mapHeight / 2f;
 
         for (int y = 0; y < mapHeight; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < effectiveWidth; x++)
             {
                 amplitude = 1;
                 frequency = 1;
@@ -84,7 +88,7 @@ public static class Noise
         {
             for (int y = 0; y < mapHeight; y++)
             {
-                for (int x = 0; x < mapWidth; x++)
+                for (int x = 0; x < effectiveWidth; x++)
                 {
                     noiseMap[x, y] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[x, y]);
                 }
