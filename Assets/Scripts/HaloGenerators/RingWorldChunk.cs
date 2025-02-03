@@ -12,6 +12,9 @@ public class RingWorldChunk : MonoBehaviour
     public int levelOfDetail;
     public int meshLevelOfDetail;
 
+    public float xOffset;
+    public float yOffset;
+
     public Dictionary<Vector3, float> vertexNoiseMap;
 
     public RingWorldChunk(RingWorldGenerator proceduralHaloChunks, GameObject parentObject, int numberOfCircumferenceChunks, int circumferenceChunkIndex, 
@@ -42,8 +45,13 @@ public class RingWorldChunk : MonoBehaviour
         haloSegment.parentObject = this.parentObject;
         haloSegment.circumferenceChunkIndex = this.circumferenceChunkIndex;
         haloSegment.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks;
+        haloSegment.widthChunkIndex = this.widthChunkIndex;
+        haloSegment.numberOfWidthChunks = this.numberOfWidthChunks;
         haloSegment.levelOfDetail = this.levelOfDetail;
         haloSegment.meshLevelOfDetail = this.meshLevelOfDetail;
+
+        haloSegment.xOffset = this.xOffset;
+        haloSegment.yOffset = this.yOffset;
 
         int detailFactor = Mathf.Max(1, (int)Mathf.Pow(2, meshLevelOfDetail));
         int segmentXVertices = ringWorldGenerator.segmentXVertices / detailFactor;
@@ -59,7 +67,10 @@ public class RingWorldChunk : MonoBehaviour
         var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
 
         float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
-        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
+        float heightScale = (ringWorldGenerator.widthInMeters / numberOfWidthChunks) / ringWorldGenerator.textureMetersPerPixel;
+
+        Debug.Log("segmentWidth: " + segmentWidth);
+        Debug.Log("widthScale: " + widthScale);
 
         float[,] noiseMap = GenerateNoiseMap(widthScale, heightScale);
 
@@ -108,7 +119,8 @@ public class RingWorldChunk : MonoBehaviour
 
         if (ringWorldGenerator.saveTexturesFiles)
         {
-            CreateTexture(widthScale, heightScale, noiseMap, false);
+            var tex = CreateTexture(widthScale, heightScale, noiseMap, false);
+            meshRenderer.material = CreateDebugMaterial(noiseMap, tex);
         }
 
         SpawnObjectsOnSurface(segmentObject, vertices, ringWorldGenerator.regions);
@@ -117,9 +129,21 @@ public class RingWorldChunk : MonoBehaviour
     // New method to split a chunk into two new chunks
     public void SplitChunk()
     {
+        var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
+
+        float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
+        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
+
+        var splitAlongCircumference = widthScale >= heightScale;
+
         // Determine new chunk positions
-        int newChunkIndex1 = circumferenceChunkIndex*2;//circumferenceChunkIndex * 2; // Example logic for new chunk index
-        int newChunkIndex2 = (circumferenceChunkIndex*2)+1;//circumferenceChunkIndex * 2 + 1;
+        var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
+        int newChunkIndex1 = splitAlongCircumference ? (circumferenceChunkIndex * 2) : circumferenceChunkIndex;
+        int newChunkIndex2 = splitAlongCircumference ? (circumferenceChunkIndex * 2) + 1 : circumferenceChunkIndex;
+
+        var newnumberOfWidthChunks = !splitAlongCircumference ? this.numberOfWidthChunks * 2 : this.numberOfWidthChunks;
+        int newWidthChunkIndex1 = !splitAlongCircumference ? (widthChunkIndex * 2)  : widthChunkIndex;
+        int newWidthChunkIndex2 = !splitAlongCircumference ? (widthChunkIndex * 2) + 1: widthChunkIndex;
 
         // Create two new GameObjects for the new chunks
         GameObject newChunk1 = new GameObject(newChunkIndex1.ToString());
@@ -136,15 +160,19 @@ public class RingWorldChunk : MonoBehaviour
         // Copy relevant properties from the current chunk to the new chunks
         haloSegment1.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment1.parentObject = this.parentObject;
-        haloSegment1.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment1.numberOfCircumferenceChunks = newnumberOfCircumferenceChunks;
         haloSegment1.circumferenceChunkIndex = newChunkIndex1;
+        haloSegment1.numberOfWidthChunks = newnumberOfWidthChunks;
+        haloSegment1.widthChunkIndex = newWidthChunkIndex1;
         haloSegment1.levelOfDetail = this.levelOfDetail;
         haloSegment1.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
         haloSegment2.ringWorldGenerator = this.ringWorldGenerator;
         haloSegment2.parentObject = this.parentObject;
-        haloSegment2.numberOfCircumferenceChunks = this.numberOfCircumferenceChunks * 2;
+        haloSegment2.numberOfCircumferenceChunks = newnumberOfCircumferenceChunks;
         haloSegment2.circumferenceChunkIndex = newChunkIndex2;
+        haloSegment2.numberOfWidthChunks = newnumberOfWidthChunks;
+        haloSegment2.widthChunkIndex = newWidthChunkIndex2;
         haloSegment2.levelOfDetail = this.levelOfDetail;
         haloSegment2.meshLevelOfDetail = this.meshLevelOfDetail - 1;
 
@@ -183,6 +211,10 @@ public class RingWorldChunk : MonoBehaviour
         float angleStep = segmentWidth / segmentXVertices;
         float startAngle = chunkIndex * segmentWidth;
 
+        float segmentHeight = ringWorldGenerator.widthInMeters / numberOfWidthChunks;
+        float heightStep = segmentHeight / (segmentYVertices - 1);
+        float startHeight = widthChunkIndex * segmentHeight;
+
         int noiseMapWidth = noiseMap.GetLength(0);
         int noiseMapHeight = noiseMap.GetLength(1);
 
@@ -191,7 +223,8 @@ public class RingWorldChunk : MonoBehaviour
             float angle = startAngle + x * angleStep;
             for (int y = 0; y < segmentYVertices; y++)
             {
-                float width = y * (widthInMeters / (segmentYVertices - 1));
+                //float width = y * (widthInMeters / (segmentYVertices - 1));
+                float height = startHeight + y * heightStep;
 
                 int noiseX = noiseMapHeight - 1 - (int)((float)y / segmentYVertices * (noiseMapHeight - 1));
                 int noiseY = (int)((float)x / segmentXVertices * (noiseMapWidth - 1));
@@ -199,7 +232,7 @@ public class RingWorldChunk : MonoBehaviour
                 float noiseValue = noiseMap[noiseY, noiseX];
                 float adjustedRadius = radiusInMeters - heightMultiplier * noiseValue;
 
-                Vector3 vertex = new Vector3(Mathf.Cos(angle) * adjustedRadius, width, Mathf.Sin(angle) * adjustedRadius);
+                Vector3 vertex = new Vector3(Mathf.Cos(angle) * adjustedRadius, height, Mathf.Sin(angle) * adjustedRadius);
                 vertices.Add(vertex);
 
                 // Store the vertex and its noise value in the dictionary
@@ -259,35 +292,6 @@ public class RingWorldChunk : MonoBehaviour
         return proceduralTexture;
     }
 
-    private Texture2D ConvertNoiseMapToNormalMap(float[,] noiseMap)
-    {
-        int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
-        Texture2D normalMap = new Texture2D(width, height, TextureFormat.RGBA32, false);
-
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                float xLeft = noiseMap[x - 1 < 0 ? x : x - 1, y];
-                float xRight = noiseMap[x + 1 >= width ? x : x + 1, y];
-                float yUp = noiseMap[x, y + 1 >= height ? y : y + 1];
-                float yDown = noiseMap[x, y - 1 < 0 ? y : y - 1];
-
-                float xDelta = (xRight - xLeft) * 0.5f;
-                float yDelta = (yUp - yDown) * 0.5f;
-
-                Vector3 normal = new Vector3(-xDelta, -yDelta, 1.0f).normalized;
-                Color normalColor = new Color(normal.x * 0.5f + 0.5f, normal.y * 0.5f + 0.5f, normal.z * 0.5f + 0.5f);
-
-                normalMap.SetPixel(x, y, normalColor);
-            }
-        }
-
-        normalMap.Apply();
-        return normalMap;
-    }
-
     private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture, GameObject gameobject)
     {
         // Create a new material instance using the custom shader
@@ -325,6 +329,20 @@ public class RingWorldChunk : MonoBehaviour
         {
             newMaterial.SetTexture($"_Texture{i}", ringWorldGenerator.regions[i].texture);
         }
+
+        return newMaterial;
+    }
+
+    private Material CreateDebugMaterial(float[,] heightMap, Texture2D proceduralTexture)
+    {
+        Debug.Log("Updating segment material...");
+
+        // Create a new material instance for this segment
+        Material newMaterial = new Material(Shader.Find("Standard"));
+        newMaterial.mainTexture = proceduralTexture;
+
+        // Set the smoothness of the material
+        newMaterial.SetFloat("_Glossiness", 0f);
 
         return newMaterial;
     }
@@ -367,7 +385,11 @@ public class RingWorldChunk : MonoBehaviour
         int octaves = ringWorldGenerator.octaves;
         float persistance = ringWorldGenerator.persistance;
         float lacunarity = ringWorldGenerator.lacunarity;
-        Vector2 offset = new(circumferenceChunkIndex * widthScale, 0);
+
+        xOffset = (circumferenceChunkIndex * widthScale) + (widthScale/2f);
+        yOffset = - (widthChunkIndex * heightScale) - (heightScale/2f);
+        Vector2 offset = new(xOffset, yOffset);
+        Debug.Log("xOffset: " + xOffset);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier);
     }

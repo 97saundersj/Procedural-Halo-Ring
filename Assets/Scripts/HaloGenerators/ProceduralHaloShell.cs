@@ -19,10 +19,10 @@ public class ProceduralHaloShell : MonoBehaviour
     [Range(3, 360)]
     public int CircleSegmentCount;
 
-    [Range(0.01f, 3000f)]
+    [Range(0.01f, 30000f)]
     public float widthInMeters;
 
-    [Range(0.1f, 50000f)]
+    [Range(0.1f, 500000f)]
     public float radiusInMeters;
 
     public float wallHeight = 1.0f;

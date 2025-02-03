@@ -12,10 +12,10 @@ public class RingWorldGenerator : MonoBehaviour
     [Range(1, 32)]
     public int NumberOfWidthChunks = 4;
 
-    [Range(1, 3000)]
+    [Range(1, 30000)]
     public int widthInMeters = 3000;
 
-    [Range(0.1f, 50000f)]
+    [Range(1f, 500000f)]
     public float radiusInMeters = 50000f;
 
     // Anything higher than 5 breaks everything
@@ -138,8 +138,11 @@ public class RingWorldGenerator : MonoBehaviour
         // Create segments within the specified range
         for (int i = Mathf.Max(0, minSegmentIndex); i <= Mathf.Min(NumberOfCircumferenceChunks - 1, maxSegmentIndex); i++)
         {
-            var segmentObject = CreateSegment(null, i, 0, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
-            createdSegments.Add(segmentObject); // Add the created segment to the list
+            for (int j = Mathf.Max(0, minSegmentIndex); j <= Mathf.Min(NumberOfWidthChunks - 1, maxSegmentIndex); j++)
+            {
+                var segmentObject = CreateSegment(null, i, j, segmentIndexCount, levelOfDetail, meshLevelOfDetail);
+                createdSegments.Add(segmentObject); // Add the created segment to the list
+            }
         }
     }
 
@@ -175,7 +178,7 @@ public class RingWorldGenerator : MonoBehaviour
     private GameObject CreateSegment(GameObject segmentObject, int circumferenceChunkIndex, int widthChunkIndex, int segmentIndexCount, int lod, int meshLod)
     {
         // Create a new RingWorldChunk instance
-        var haloSegment = new RingWorldChunk(this, segmentsParent, NumberOfCircumferenceChunks, circumferenceChunkIndex, widthChunkIndex, NumberOfWidthChunks, lod, meshLod);
+        var haloSegment = new RingWorldChunk(this, segmentsParent, NumberOfCircumferenceChunks, circumferenceChunkIndex, NumberOfWidthChunks, widthChunkIndex, lod, meshLod);
 
         if (segmentObject == null)
         {
