@@ -391,7 +391,7 @@ public class RingWorldChunk : MonoBehaviour
         Vector2 offset = new(xOffset, yOffset);
         Debug.Log("xOffset: " + xOffset);
 
-        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier);
+        return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier, meshLevelOfDetail);
     }
 
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
