@@ -131,10 +131,14 @@ public class RingWorldChunk : MonoBehaviour
     {
         var segmentWidth = (2 * Mathf.PI * ringWorldGenerator.radiusInMeters) / numberOfCircumferenceChunks;
 
-        float widthScale = segmentWidth / ringWorldGenerator.textureMetersPerPixel;
-        float heightScale = ringWorldGenerator.widthInMeters / ringWorldGenerator.textureMetersPerPixel;
-
+        float widthScale = segmentWidth;
+        float heightScale = ringWorldGenerator.widthInMeters / numberOfWidthChunks;
+        
         var splitAlongCircumference = widthScale >= heightScale;
+
+        Debug.Log("widthScale:" + segmentWidth);
+        Debug.Log("heightScale:" + heightScale);
+        Debug.Log("splitAlongCircumference:" + splitAlongCircumference);
 
         // Determine new chunk positions
         var newnumberOfCircumferenceChunks = splitAlongCircumference ? this.numberOfCircumferenceChunks * 2 : this.numberOfCircumferenceChunks;
@@ -294,8 +298,15 @@ public class RingWorldChunk : MonoBehaviour
 
     private Material CreateMaterial(float[,] heightMap, Texture2D proceduralTexture, GameObject gameobject)
     {
+        // Convert the noiseMap to a Texture2D to use as a height map
+        Texture2D heightMapTexture = TextureGenerator.TextureFromHeightMap(heightMap);
+        heightMapTexture.filterMode = FilterMode.Bilinear;
+
         // Create a new material instance using the custom shader
-        Material newMaterial = new Material(Shader.Find("Custom/Terrain"));
+        Material newMaterial = new Material(Shader.Find("Shader Graphs/TerrainShaderGraph"));
+
+        // Assign the height map texture to the material
+        newMaterial.SetTexture("_HeightMap", heightMapTexture);
 
         // Extract colors and height percentages from ringWorldGenerator.regions
         int baseColourCount = ringWorldGenerator.regions.Length;
@@ -328,6 +339,7 @@ public class RingWorldChunk : MonoBehaviour
         for (int i = 0; i < baseColourCount; i++)
         {
             newMaterial.SetTexture($"_Texture{i}", ringWorldGenerator.regions[i].texture);
+            newMaterial.SetFloat($"_Height{i}", ringWorldGenerator.regions[i].height);
         }
 
         return newMaterial;
@@ -459,7 +471,7 @@ public class RingWorldChunk : MonoBehaviour
         {
             TerrainType? selectedTerrainType = null;
             float noiseValue = vertexNoise.Value;
-
+            Debug.Log("noiseValue:" + noiseValue);
             foreach (var terrainType in terrainTypes)
             {
                 if (noiseValue <= terrainType.height)
