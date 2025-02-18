@@ -471,10 +471,10 @@ public class RingWorldChunk : MonoBehaviour
         {
             TerrainType? selectedTerrainType = null;
             float noiseValue = vertexNoise.Value;
-            Debug.Log("noiseValue:" + noiseValue);
+            
             foreach (var terrainType in terrainTypes)
             {
-                if (noiseValue <= terrainType.height)
+                if (noiseValue >= terrainType.objectStartHeight && noiseValue <= terrainType.objectEndHeight)
                 {
                     selectedTerrainType = terrainType;
                     break;

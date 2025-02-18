@@ -116,6 +116,8 @@ public struct TerrainType
     public float height;
     public Color colour;
     public Texture2D texture;
+    public float objectStartHeight;
+    public float objectEndHeight;
     public List<SpawnableObject> objectsToSpawn;
 }
 
