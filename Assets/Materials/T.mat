@@ -181,7 +181,7 @@ Material:
     - _MinHeight: 0
     - _MinRadius: 9990
     - _Mode: 0
-    - _NormalStrength: 25
+    - _NormalStrength: 5
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _RockHeight: 1
