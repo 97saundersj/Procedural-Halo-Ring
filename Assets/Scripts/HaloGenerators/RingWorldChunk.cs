@@ -389,8 +389,8 @@ public class RingWorldChunk : MonoBehaviour
     // Modified method to generate a procedural texture using segmentXVertices and segmentYVertices
     private float[,] GenerateNoiseMap(float widthScale, float heightScale)
     {
-        int mapWidth = (Mathf.RoundToInt(widthScale)) + 1;
-        var mapHeight = (Mathf.RoundToInt(heightScale)) + 1;
+        int mapWidth = Mathf.RoundToInt(widthScale);
+        var mapHeight = Mathf.RoundToInt(heightScale);
 
         int seed = ringWorldGenerator.seed;
         float scale = ringWorldGenerator.noiseScale;
@@ -399,9 +399,11 @@ public class RingWorldChunk : MonoBehaviour
         float lacunarity = ringWorldGenerator.lacunarity;
 
         xOffset = (circumferenceChunkIndex * widthScale) + (widthScale/2f);
-        yOffset = - (widthChunkIndex * heightScale) - (heightScale/2f);
+        yOffset = -(widthChunkIndex * heightScale) - (heightScale/2f);
+        
+        xOffset -= (float)(circumferenceChunkIndex * 0.9);
+        yOffset += (widthChunkIndex * 3);
         Vector2 offset = new(xOffset, yOffset);
-        Debug.Log("xOffset: " + xOffset);
 
         return Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, scale, octaves, persistance, lacunarity, offset, ringWorldGenerator.heightCurve, ringWorldGenerator.heightMultiplier, meshLevelOfDetail);
     }
