@@ -24,6 +24,14 @@ namespace StarterAssets
 		public PauseMenu pauseMenu;
 		public GameObject flashlight;
 
+		public GameObject mainCam;
+
+		public GameObject flyingCam;
+
+		public GameObject followCam;
+
+		public GameObject player;
+
 #if ENABLE_INPUT_SYSTEM
 		public void OnMove(InputValue value)
 		{
@@ -52,6 +60,28 @@ namespace StarterAssets
 		public void OnToggleFlashlight(InputValue value)
 		{
 			flashlight.SetActive(value.isPressed ? !flashlight.activeSelf : flashlight.activeSelf);
+		}
+
+		public void OnToggleFlyMode(InputValue value)
+		{
+			Debug.Log("toggledfly");
+			flyingCam.SetActive(value.isPressed ? !flyingCam.activeSelf : flyingCam.activeSelf);
+
+			mainCam.SetActive(value.isPressed ? !mainCam.activeSelf : mainCam.activeSelf);
+			followCam.SetActive(value.isPressed ? !followCam.activeSelf : followCam.activeSelf);
+			player.SetActive(value.isPressed ? !player.activeSelf : player.activeSelf);
+			
+			/*
+			if (value.isPressed)
+			{
+				!flyingCam.activeSelf;
+			}
+			else
+			{
+				flyingCam.activeSelf;
+			}
+			*/
+			//flashlight.SetActive(value.isPressed ? !flashlight.activeSelf : flashlight.activeSelf);
 		}
 
 		public void OnToggleSettings(InputValue value)

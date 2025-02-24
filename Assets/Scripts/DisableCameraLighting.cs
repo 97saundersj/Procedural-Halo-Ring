@@ -18,15 +18,11 @@ public class CameraLightingControl : MonoBehaviour
                 return;
             }
             float lightRotationX = mainLight.transform.eulerAngles.x;
-            Debug.Log("lightxrotation" + lightRotationX);
+
             bool isBelowStartThreshold = lightRotationX < disableRotationStart;
             bool isBelowEndThreshold = lightRotationX > disableRotationEnd;
 
             mainLight.enabled = !isBelowStartThreshold && !isBelowEndThreshold;
-            if (!mainLight.enabled)
-            {
-                Debug.Log("Disabling light for this camera");
-            }
         }
     }
 

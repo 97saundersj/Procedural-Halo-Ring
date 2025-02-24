@@ -1,4 +1,7 @@
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 [RequireComponent(typeof(Camera))]
 [RequireComponent(typeof(Rigidbody))]
@@ -14,6 +17,13 @@ public class FlyCamera : MonoBehaviour
     public float mouseMovementThreshold = 20f; // Define a threshold for mouse movement
 
     public float boostTimeToMax = 3f; // Time in seconds to reach max speed when boosting
+
+    public PauseMenu pauseMenu;
+    public GameObject mainCam;
+	public GameObject flyingCam;
+	public GameObject followCam;
+	public GameObject player;
+
     private float currentBoostMultiplier = 1f; // Current boost multiplier
 
     Vector3 velocity; // current velocity
@@ -144,4 +154,34 @@ public class FlyCamera : MonoBehaviour
         // Use the current boost multiplier
         return direction * acceleration * currentBoostMultiplier;
     }
+
+    #if ENABLE_INPUT_SYSTEM
+
+		public void OnToggleFlyMode(InputValue value)
+		{
+			Debug.Log("toggledfly");
+			flyingCam.SetActive(value.isPressed ? !flyingCam.activeSelf : flyingCam.activeSelf);
+
+			mainCam.SetActive(value.isPressed ? !mainCam.activeSelf : mainCam.activeSelf);
+			followCam.SetActive(value.isPressed ? !followCam.activeSelf : followCam.activeSelf);
+			player.SetActive(value.isPressed ? !player.activeSelf : player.activeSelf);
+			
+			/*
+			if (value.isPressed)
+			{
+				!flyingCam.activeSelf;
+			}
+			else
+			{
+				flyingCam.activeSelf;
+			}
+			*/
+			//flashlight.SetActive(value.isPressed ? !flashlight.activeSelf : flashlight.activeSelf);
+		}
+
+		public void OnToggleSettings(InputValue value)
+		{
+			pauseMenu.Toggle();
+		}
+#endif
 }

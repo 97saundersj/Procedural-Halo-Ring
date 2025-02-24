@@ -278,7 +278,7 @@ public class RingWorldGenerator : MonoBehaviour
 
                     // Split up chunk
                     RingWorldChunk haloSegment = closestSegment.GetComponent<RingWorldChunk>();
-                    Debug.Log("checking valid");
+                    
                     if (haloSegment != null && haloSegment.meshLevelOfDetail > 0)
                     {
                         Debug.Log("Splitting");
