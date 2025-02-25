@@ -64,7 +64,7 @@ namespace StarterAssets
 
 		public void OnToggleFlyMode(InputValue value)
 		{
-			Debug.Log("toggledfly");
+			Debug.Log("toggledfly start");
 			flyingCam.SetActive(value.isPressed ? !flyingCam.activeSelf : flyingCam.activeSelf);
 
 			mainCam.SetActive(value.isPressed ? !mainCam.activeSelf : mainCam.activeSelf);

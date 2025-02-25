@@ -159,7 +159,7 @@ public class FlyCamera : MonoBehaviour
 
 		public void OnToggleFlyMode(InputValue value)
 		{
-			Debug.Log("toggledfly");
+			Debug.Log("toggledfly cam");
 			flyingCam.SetActive(value.isPressed ? !flyingCam.activeSelf : flyingCam.activeSelf);
 
 			mainCam.SetActive(value.isPressed ? !mainCam.activeSelf : mainCam.activeSelf);
